@@ -1,0 +1,136 @@
+---
+title: "Feature selection"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{css, echo=FALSE}
+pre {
+  max-height: 200px;
+  overflow-: auto;
+}
+```
+
+
+## Load data
+```{r feature selection data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+solar_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# LASSO-selected features
+```{r}
+## Load selected feature file
+feature <- read_csv(
+            fs::path(dir_results, 
+                   "prediction",
+                   "4_feature_selection_diabete_5000_1122.csv")
+,col_names = FALSE) %>%
+    rename(feature = X1,
+           coefficient = X2,
+           outcome = X3)
+
+## Selected features that appear at least 4250 times of the replications
+feature_n <- feature %>% 
+  group_by(feature) %>% 
+  summarize(count =n()) %>%
+  arrange(desc(count)) %>%
+  mutate(percentage = count/5000)
+
+# feature_n %>% filter(!feature %in% c(covars1, covars2, "sex_1_Male") & feature != "(Intercept)"& percentage > 0.25) %>% ggplot(aes(x=percentage)) + 
+#   geom_vline(aes(xintercept = 0.85), color = "blue", linetype = "dashed")+
+#   # geom_vline(aes(xintercept = 0.9), color = "blue", linetype = "dashed")+
+#   geom_histogram(fill = "white", color = "black", bins = 100) +
+#   labs(title = "Distribution of Percentage", x = "Percentage", y = "Count") +
+#   scale_x_continuous(limits = c(0.2, 1), breaks = seq(0.2,1,0.1)) +
+#   theme_classic()
+# 
+# ggsave(filename = fs::path(dir_reports, "4_feature_selection_distribution.png"), 
+#        width = 10, height = 6, dpi=300)
+
+feature_80 <- feature_n %>% filter(count > 0.85*5000)
+
+selected_feature_name <- feature_80$feature[-c(1:8)] # 3
+```
+
+# Correlation of the features and covars
+```{r}
+chs_cor <- chs_data %>%
+  mutate(sex_1 = ifelse(sex_1 == "Female", 1, 2)) %>%
+  select(all_of(covars1[-4]),
+         all_of(covars2),
+                            all_of(selected_feature_name)) %>%
+  rename( 
+          # `Riboflavin`= `395.1557835_20.84169214`,
+          `Hippuric acid` = `214.026117480542_35.1421775112176`,
+          # `Gamma Hydroxybutyric Acid` = `85.0295266786533_136.974861632338`,
+          `Taurocholic acid`= `515.287209133297_215.197333996352`,
+          # `CE5708`= `425.25200021332_66.5015707990317`,
+          # `4-Hydroperoxy-2-nonenal` = `171.1026058_35.24416628`,
+          # `Homovanillic acid` = `262.9754638_22.10657919`,
+          # `L-Threonine` = `100.040536693444_202.570926684761`,
+          # `3-Methoxytyramine` = `132.0807086_170.2447445`,
+          `Caprylic acid` = `125.097384256509_58.1004384860803`
+          # `Adenine` = `134.047313078051_18.667900745273`,
+          # `Hypotaurine` = `110.027055434909_266.167833117555` 
+          )
+
+solar_cor <- solar_data %>%
+  mutate(sex_1 = ifelse(sex_1 == "Female", 1, 2)) %>%
+  select(all_of(covars1[-4]),
+         all_of(covars2),
+                            all_of(selected_feature_name)) %>%
+  rename( 
+          # `Riboflavin`= `395.1557835_20.84169214`,
+          `Hippuric acid` = `214.026117480542_35.1421775112176`,
+          # `Gamma Hydroxybutyric Acid` = `85.0295266786533_136.974861632338`,
+          `Taurocholic acid`= `515.287209133297_215.197333996352`,
+          # `CE5708`= `425.25200021332_66.5015707990317`,
+          # `4-Hydroperoxy-2-nonenal` = `171.1026058_35.24416628`,
+          # `Homovanillic acid` = `262.9754638_22.10657919`,
+          # `L-Threonine` = `100.040536693444_202.570926684761`,
+          # `3-Methoxytyramine` = `132.0807086_170.2447445`,
+          `Caprylic acid` = `125.097384256509_58.1004384860803`
+          # `Adenine` = `134.047313078051_18.667900745273`,
+          # `Hypotaurine` = `110.027055434909_266.167833117555` 
+          )
+  
+corr_chs <- cor(chs_cor)
+corr_solar <- cor(solar_cor)
+png(fs::path(dir_reports, "Figure S1 correlation_plot_covars_features_chs.png"),
+    width = 2000, height = 2000, res = 350)
+corrplot(corr_chs, type="lower",
+         col=brewer.pal(n=8, name="Blues"),
+         title = "",
+         method = "color",
+         addCoef.col = "black",
+         tl.cex=0.5, number.cex=0.5)
+dev.off()
+
+png(fs::path(dir_reports, "Figure S1 correlation_plot_covars_features_solar.png"),
+    width = 2000, height = 2000, res = 350)
+corrplot(corr_solar, type="lower",
+         col=brewer.pal(n=8, name="Blues"),
+         title = "",
+         method = "color",
+         addCoef.col = "black",
+         tl.cex=0.5, number.cex=0.5)
+dev.off()
+```
+

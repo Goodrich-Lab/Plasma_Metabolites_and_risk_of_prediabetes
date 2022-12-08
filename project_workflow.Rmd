@@ -1,0 +1,38 @@
+---
+title: "SOL CHS Metabolomics Diabetes"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    code_folding: hide
+---
+
+```{r overall setup, include=FALSE, echo=FALSE}
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# 1. Data
+```{r child =fs::path(here::here(),"0_project_setup","1_create_analysis_dataset.Rmd")}
+
+```
+
+# 2. Analysis
+```{r child =fs::path(here::here(),"1_analysis","MWAS Analysis.Rmd")}
+
+```
+
+```{r child =fs::path(here::here(),"1_analysis","Mummichog Pathway Analysis.Rmd")}
+
+```
+
+```{r child =fs::path(here::here(),"1_analysis","Mummichog Result Figure.Rmd")}
+
+```
+
+---
+

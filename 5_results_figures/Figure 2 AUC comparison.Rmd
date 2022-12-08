@@ -1,0 +1,73 @@
+## Load data
+```{r feature selection data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+sol_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Preparing analysis ready solar and chs data
+All continuous features and covariates variables are normalized.
+```{r prepare analysis ready data, echo=TRUE}
+# solar -------
+solar_data <- solar_data %>%
+  mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1 ),
+            .funs = list(~scale(.))
+            )
+
+# chs ----------------
+chs_data <- chs_data %>%
+  mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1),
+            .funs = list(~scale(.)))
+```
+
+
+
+# AUC comparison plot 
+```{r}
+# model comparison
+pvalue_df <- data.frame(p_value = c(
+  roc.test(roc(solar_pred3$diabete_change_di, solar_pred3$pred),
+           roc(solar_pred1$diabete_change_di, solar_pred1$pred))$p,
+  roc.test(roc(solar_pred4$diabete_change_di,solar_pred4$pred),
+           roc(solar_pred2$diabete_change_di, solar_pred2$pred))$p,
+  roc.test(roc(chs_pred3$diabete_change_di, chs_pred3$pred),
+           roc(chs_pred1$diabete_change_di, chs_pred1$pred))$p, 
+  roc.test(roc(chs_pred4$diabete_change_di, chs_pred4$pred),
+           roc(chs_pred2$diabete_change_di, chs_pred2$pred))$p), 
+model = c("GRF + metabolites vs GRF", "GRF + SRF + metabolites vs GRF + SRF","GRF + metabolites vs GRF", "GRF + SRF + metabolites vs GRF + SRF" ), 
+cohort = c("SOLAR", "SOLAR", "CHS", "CHS"))
+
+### Create auc comparision plots-----
+auc %>%
+  ggplot(aes(x = model,y = auc, color = cohort)) +
+  geom_point(size = 1, position =position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = ci_low,
+                    ymax = ci_high),
+                width = 0.2, 
+                position =position_dodge(width = 0.3)) +
+  ylab("AUC (95% CI)") +
+  theme(panel.background = element_rect(fill="grey95"), 
+        # panel.grid = element_blank(),
+          strip.background = element_rect(fill = "white"),
+          strip.text.y = element_text(angle = 0, hjust = 0),
+        text = element_text(size = 8),
+        axis.title.x=element_blank(),
+        axis.line.x = element_line(color = "black"),
+        # axis.title.y=element_blank(),
+        axis.line.y = element_line(color = "black"),
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust=1))
+
+ggsave(filename = fs::path(dir_reports, "Figure 4. Prediction performance of models.jpg"), 
+       width = 8, height = 4, dpi=300)
+```

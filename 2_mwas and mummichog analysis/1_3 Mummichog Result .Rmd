@@ -1,0 +1,113 @@
+---
+title: "Mummichog result figure"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{css, echo=FALSE}
+pre {
+  max-height: 200px;
+  overflow-: auto;
+}
+```
+
+```{r, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Combine Mummichog p-value between charts
+```{r Mummichog p value, include = FALSE, echo = FALSE}
+# Key for superpathways
+superpathwaykey <- readxl::read_xlsx(fs::path(dir_data_analysis %>%
+                                                dirname(),
+                                              "Supporting files",                                                "superpathway_key_sept_21.xlsx")) %>%
+  dplyr::rename(path = pathway)
+
+# Individual exposures: Get list of all results folders ------------------------
+cohort <- c("solar")
+outcomes <- c("diabete_change_di")
+
+dir_results_outcomes <- fs::path(dir_results, outcomes) 
+
+
+dir_results_outcomes_chrt <- map(dir_results_outcomes,
+                                       ~fs::path(.x, cohort)) %>% 
+  unlist() 
+
+# 1) Load Mummichog pathway results --------------------------------------------
+# Load pathway results with combined_pvals from BOTH Mummichog AND GSEA
+mum_pw <- read_csv(fs::path(dir_results_outcomes_chrt, 
+                            "mummichog_integ_pathway_enrichment.csv"), 
+                   id = "file_name") %>% 
+  janitor::clean_names() %>% 
+  rename(path = x1) %>% 
+  # mutate(file_name = str_replace_all(file_name, "/", "_") %>% 
+  #          str_remove("_mummichog_pathway_enrichment.csv"))
+  dplyr::mutate(file_name = file_name %>% 
+         str_remove("/mummichog_integ_pathway_enrichment.csv"))
+
+# Load pathway results including ec.hits results
+mum_pw_ec <- read_csv(fs::path(dir_results_outcomes_chrt, 
+                               "mummichog_pathway_enrichment.csv"), 
+                      id = "file_name") %>% 
+  janitor::clean_names() %>% 
+  rename(path = x1) %>% 
+  # mutate(file_name = str_replace_all(file_name, "/", "_") %>% 
+  #          str_remove("_mummichog_pathway_enrichment.csv"))
+  mutate(file_name = file_name %>% 
+           str_remove("/mummichog_pathway_enrichment.csv"))
+
+# Add EC information to mum_pw
+mum_pw_ec <- mum_pw %>% 
+  tidylog::left_join(mum_pw_ec %>% 
+                       dplyr::select(file_name, path, ec_hits),
+                     by = c("file_name", "path"))
+
+# Get columns for outcome, cohort
+mum_pw_ec1 <- mum_pw_ec %>% 
+  mutate( 
+    temp = str_split(file_name,  '/2_Results/') %>% 
+      map_chr(2), 
+    outcome = str_split(temp,  '/') %>% 
+      map_chr(1),
+    cohort = str_split(temp,  '/') %>% 
+      map_chr(2), 
+    enrichment = sig_hits/hits, 
+    neg_logp = -log(combined_pvals),
+    name = str_c(cohort, outcome, sep = "_") %>% 
+      tolower(),
+    # outcomeog = outcome, 
+    # pfas = rename_pfas(pfas,include_asterisk = TRUE), 
+    path_2  = str_replace(path, "metabolism", "met.") %>% 
+      str_replace("Metabolism", "met.") %>% 
+      str_replace(., " pathway", "")) %>% 
+  select(outcome, cohort, name, everything(), -temp, -file_name)
+
+
+# Combine pathways with long data to get list to include
+mum_pw_ec_final <- tidylog::left_join(mum_pw_ec1, 
+                                   mum_pw_ec_final_w %>% 
+                                     select(outcome, path, path_2), 
+                                   by = c("outcome", "path", "path_2")) %>% 
+  tidylog::left_join(superpathwaykey)
+
+# Clean Environment
+rm(mum_pw,mum_pw_ec, mum_pw_ec1, mum_pw_ec_w,mum_pw_ec_w1 ,wgt_chs, wgt_sol)
+
+# Save Data
+
+write_rds(mum_pw_ec_final,
+          fs::path(dir_results,
+                   "1_3 SOL CHS Diabete Mummichog long sig PW.RDS"))
+```

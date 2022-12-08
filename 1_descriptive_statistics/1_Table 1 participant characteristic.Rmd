@@ -1,0 +1,42 @@
+---
+title: "Descriptive statistic"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{css, echo=FALSE}
+pre {
+  max-height: 200px;
+  overflow-: auto;
+}
+```
+
+## Load data
+```{r feature selection data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+solar_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Descriptive statistics 
+```{r descriptive statistic, echo = TRUE}
+
+table1::table1(~ age_1 + sex_1 + bmi_1 + og_glu_5_1 + og_glu120_1 + tot_chol_1 + tag_1+ diabete_change_di + diabete_change, data = solar_data)
+
+table1::table1(~ age_1 + sex_1 + bmi_1 + hisp_1 + og_glu_5_1 + og_glu120_1 + tot_chol_1 + tag_1+ diabete_change_di + diabete_change, data = chs_data )
+```
+
+

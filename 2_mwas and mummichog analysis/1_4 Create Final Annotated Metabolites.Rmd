@@ -1,0 +1,115 @@
+---
+title: "Create final annotated metabolites"
+author: "Hongxu Wang"
+date: "4/21/2022"
+output: html_document
+---
+
+```{css, echo=FALSE}
+pre {
+  max-height: 200px;
+  overflow-: auto;
+}
+```
+
+
+```{r, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Combined compounds from mummichog
+```{r combined compounds, include = FALSE, echo = FALSE}
+
+# 1) Read in long mum results-----------------
+mum_pw_long <- read_rds(fs::path(dir_results,
+                             "1_3 SOL CHS Diabete Mummichog long sig PW.RDS")) %>% 
+  filter(!is.na(ec_hits))
+
+#2) Read in mz/rt key ------------------------------------------
+# (Note: doesn't matter which cohort you use, this file is the same for both)
+mzrtkey  <- read_csv(fs::path(dir_results,
+                              "diabete_change_di",
+                              "solar",
+                              "mummichog_matched_compound_all.csv")) %>% 
+  clean_names() %>%
+  mutate(feature = str_c(query_mass, 
+                         retention_time, 
+                         sep = "_"))
+
+# 3) Create pw to ec dataset -------------------------------------
+# Split ecs based on ";", turn into dataframe 
+pw_ec_df <- str_split(mum_pw_long$ec_hits, ";") %>% 
+  enframe() %>% 
+  rename(empirical_compound = value)
+
+# Bind pw_ec_df with full data
+pw_ec_key <- bind_cols(mum_pw_long, pw_ec_df)
+
+# Unnest data to get a unique row for each empirical compound
+pw_ec_key2 <- pw_ec_key %>% 
+  unnest(empirical_compound) %>% 
+  select(cohort, path, path_2, empirical_compound,super_pathway)
+
+# Check for distinct values
+ecd_pw_key_final <- pw_ec_key2 %>% 
+  tidylog::distinct(path, path_2,super_pathway, empirical_compound) %>% 
+  tidylog::group_by(empirical_compound) %>% 
+  tidylog::summarise(path = str_c(path, collapse = "; "), 
+                     path_2 = str_c(path_2, collapse = "; "),
+                     super_pathway = str_c(super_pathway, collapse = ";")) %>% 
+  ungroup() ## HW NOTE: Right now one compound to multiple pathways. 
+
+# 4) Combine mzrt key and ecd_pw_key -----------------------------------------
+ecd_pw_key <- tidylog::left_join(ecd_pw_key_final, 
+                                 mzrtkey, 
+                                 by = c("empirical_compound")) %>% 
+  tidylog::filter(!is.na(feature)) %>% 
+  rename(name = feature) %>% 
+  distinct()
+
+# 5) Merge with Compound Names ----------------------------------------------------------
+# Read in hand curated list of molecule names (this was from previous version 
+# of data analysis, but the cpd/name key is correct). This data was created in "other_scripts/Convert Mummichog cpd ids to cpd names.R"
+cpd_name_key <- read_rds(
+  fs::path(dir_data_analysis %>% dirname(),
+           "Supporting Files", 
+           "kegg_cpd_name_key.rds")) %>% 
+  select(matched_compound, 
+         met_name) %>% 
+  distinct()
+
+
+# left join with key from current analysis
+ecd_pw_key_2 <- ecd_pw_key %>% 
+  tidylog::left_join(cpd_name_key) %>% 
+  select(path, path_2, met_name, everything()) %>% 
+  rename(pathway = path) 
+
+ecd_pw_key_final <- ecd_pw_key_2 %>% 
+  tidylog::group_by(pathway, 
+                    path_2,
+                    super_pathway,
+                    empirical_compound,
+                    matched_form,
+                    query_mass,
+                    retention_time,
+                    mass_diff,
+                    name) %>% 
+  tidylog::summarise(met_name = str_c(met_name, 
+                                      collapse = "; "), 
+                     matched_compound = str_c(matched_compound,
+                                              collapse = "; ")) %>% 
+  select(empirical_compound, met_name, everything()) %>%
+  ungroup()
+
+# Save final Key
+write_rds(ecd_pw_key_final,
+          fs::path(
+            dir_results,
+            "1_4 mummichog_pw_ec_feature_key_with_cpd_names.rds"))
+```
+

@@ -1,0 +1,495 @@
+---
+title: "Feature selection"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+
+## Load data
+```{r feature selection data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+sol_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Preparing analysis ready solar and chs data
+All continuous features and covariates variables are normalized.
+```{r prepare analysis ready data, echo=TRUE}
+# solar -------
+solar_data <- solar_data %>%
+  mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1 ),
+            .funs = list(~scale(.))
+            )
+
+# chs ----------------
+chs_data <- chs_data %>%
+  mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1),
+            .funs = list(~scale(.)))
+```
+
+
+# Solar Model1:  general risk factors
+```{r}
+solar_data_model <- solar_data %>% 
+  select(diabete_change_di,
+         all_of(covars1[-4])) %>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+fit <- glm(diabete_change_di ~.,
+                 data = solar_data_model,
+                 family = "binomial")
+
+result_df1<- fit %>% tidy(., conf.level = 0.95) 
+
+solar_pred1<- solar_data %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit,
+                               type = "response"))$pred) %>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+# auc value
+# roc(solar_pred1$diabete_change_di, solar_pred1$pred)
+# ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)
+
+# vif(fit)
+```
+
+# Solar Model2: diabete_change_di ~ general risk factors + specific risk factors
+```{r}
+solar_data_model <- solar_data %>% 
+  select(diabete_change_di,
+         all_of(covars1[-4]),
+         all_of(covars2)) %>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+fit <- glm(diabete_change_di ~.,
+                 data = solar_data_model,
+                 family = "binomial")
+
+result_df2<- fit %>% tidy(., conf.level = 0.95) 
+
+solar_pred2<- solar_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit,
+                               type = "response"))$pred) %>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+# auc value
+# roc(solar_pred2$diabete_change_di, solar_pred2$pred)
+# ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)
+
+# vif(fit)
+```
+
+
+# SOLAR model3: diabete_change_di ~ general risk factors + lasso-selected metabolites
+```{r full model chs, echo=TRUE}
+solar_data_model <- solar_data %>% 
+  select(diabete_change_di,
+         all_of(selected_feature_name),
+         all_of(covars1[-4])) %>%
+   mutate(diabete_change_di = factor(diabete_change_di))
+
+# logistic regression
+fit <- glm(diabete_change_di~.,
+           family = "binomial",
+           data = solar_data_model) 
+
+result_df3 <- fit %>% tidy(., conf.int = TRUE) %>% 
+  mutate(model = "GRF and metabolites",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+  
+solar_pred3 <- solar_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+# roc(solar_pred3$diabete_change_di, solar_pred3$pred)
+# ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)
+# 
+# vif(fit)
+
+```
+
+
+# SOLAR Model4: diabete_change_di ~ general risk factors + specific risk factors + lasso-selected metabolites
+```{r}
+solar_data_model <- solar_data %>% 
+    select(diabete_change_di, 
+           all_of(selected_feature_name), 
+           all_of(covars1[-4]),
+           all_of(covars2))%>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+# logistic regression
+fit <- glm(diabete_change_di~.,
+           family = "binomial",
+           data = solar_data_model) 
+
+result_df4 <- fit %>% tidy(conf.int = TRUE) %>%
+  mutate(
+         model = "GRF + SRF + metabolites",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+
+# Adding annotation information to the result
+model_result_annotation <- result_df4 %>% tidylog::left_join(mzrt_key_sub %>% mutate(feature = str_c("`", name ,"`")), by = c("term"= "feature")) %>% 
+  select(-name, -pathway, -query_mass, -retention_time, -mass_diff,
+         -matched_compound, -empirical_compound, -met_name, - path_2, term, met_name_first, everything())
+
+write_csv(model_result_annotation, fs::path(dir_results,"prediction", "4_solar_model_result_with_annotation_5000.csv"))
+
+solar_pred4 <- solar_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+# roc(solar_pred4$diabete_change_di, solar_pred4$pred)
+# ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)
+
+# vif(fit)
+
+```
+
+
+# SOLAR model5: diabete_change_di ~ selected features
+```{r full model chs, echo=TRUE}
+solar_data_model <- solar_data %>% 
+  select(diabete_change_di,
+         all_of(selected_feature_name)) %>%
+   mutate(diabete_change_di = factor(diabete_change_di))
+
+# logistic regression
+fit <- glm(diabete_change_di~.,
+           family = "binomial",
+           data = solar_data_model) 
+
+result_df5 <- fit %>% tidy(., conf.int = TRUE) %>% 
+  mutate(model = "metabolites",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+
+solar_pred5 <- solar_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+# roc(solar_pred5$diabete_change_di, solar_pred5$pred)
+# ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)
+```
+
+
+# CHS model1: diabete_change_di~ basic covars
+```{r}
+chs_data_model <- chs_data %>% 
+  select(diabete_change_di,
+         all_of(covars1)) 
+
+fit <- glm(diabete_change_di ~.,
+                 data = chs_data_model,
+                 family = "binomial")
+
+result_df1<- fit %>% tidy(., conf.int = TRUE) %>%
+  mutate(model = "GRF",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+
+
+chs_pred1<- chs_data %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit,
+                               type = "response"))$pred) %>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+# auc value
+# roc(chs_pred1$diabete_change_di, chs_pred1$pred)
+# ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)
+# 
+# vif(fit_covars)
+```
+
+# CHS model2: diabete_change_di~ basic covars + clinical covars
+```{r}
+chs_data_model <- chs_data %>% 
+  select(diabete_change_di,
+         all_of(covars1),
+         all_of(covars2))
+
+fit <- glm(diabete_change_di ~.,
+                 data = chs_data_model,
+                 family = "binomial")
+
+result_df2<- fit %>% tidy(., conf.int = TRUE) %>%
+  mutate(model = "GRF + SRF",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+
+
+chs_pred2<- chs_data %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit,
+                               type = "response"))$pred) %>%
+  mutate(diabete_change_di = factor(diabete_change_di))
+
+# auc value
+# roc(chs_pred2$diabete_change_di, chs_pred2$pred)
+# ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)
+# 
+# vif(fit)
+```
+# CHS model3: diabete_change_di ~ general risk factors + selected metabolites
+```{r full model chs, echo=TRUE}
+chs_data_model <- chs_data %>% 
+  select(diabete_change_di,
+         all_of(selected_feature_name),
+         all_of(covars1)) %>%
+   mutate(diabete_change_di = factor(diabete_change_di))
+
+# logistic regression
+fit <- glm(diabete_change_di~.,
+           family = "binomial",
+           data = chs_data_model) 
+
+result_df3 <- fit %>% tidy(., conf.int = TRUE) %>% 
+  mutate(model = "GRF + metabolites",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+  
+chs_pred3 <- chs_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+# roc(chs_pred3$diabete_change_di, chs_pred3$pred)
+# ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)
+# 
+# vif(fit)
+```
+
+
+# CHS model4: diabete_change_di ~ general risk factors + specific risk factors + selected features
+```{r full model chs, echo=TRUE}
+chs_data_model <- chs_data %>%
+  select(diabete_change_di,
+         all_of(selected_feature_name),
+         all_of(covars1),
+         all_of(covars2)) %>%
+   mutate(diabete_change_di = factor(diabete_change_di))
+
+# logistic regression
+fit <- glm(diabete_change_di~.,
+           family = "binomial",
+           data = chs_data_model) 
+
+result_df4 <- fit %>% tidy(., conf.int = TRUE) %>% 
+  mutate(model = "GRF + SRF + metabolites",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+  
+# Adding annotation information to the result
+model_result_annotation <- result_df4 %>% tidylog::left_join(mzrt_key_sub %>% mutate(feature = str_c("`", name ,"`")), by = c("term"= "feature")) %>% 
+  select(-name, -pathway, -query_mass, -retention_time, -mass_diff,
+         -matched_compound, -empirical_compound, -met_name, -path_2, term,
+         met_name_first, everything())
+
+write_csv(model_result_annotation, fs::path(dir_results,"prediction", "4_chs_model_result_with_annotation_5000.csv"))
+
+
+chs_pred4 <- chs_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+# Calculate the VIF for each predictor variable in the model
+(vif_df <- data.frame(vif_full_model = vif(fit)) %>% rownames_to_column("predictor"))
+
+```
+
+# CHS model5: diabete_change_di ~ selected metabolites
+```{r full model chs, echo=TRUE}
+chs_data_model <- chs_data %>% 
+  select(diabete_change_di,
+         all_of(selected_feature_name)) %>%
+   mutate(diabete_change_di = factor(diabete_change_di))
+
+# logistic regression
+fit <- glm(diabete_change_di~.,
+           family = "binomial",
+           data = chs_data_model) 
+
+result_df5 <- fit %>% tidy(., conf.int = TRUE) %>% 
+  mutate(model = "metabolites",
+         odds_ratio = exp(estimate),
+         exp_conf_high = exp(conf.high),
+         exp_conf_low = exp(conf.low))
+
+chs_pred5 <- chs_data_model %>% 
+  dplyr::select(outcomes[2]) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+# roc(chs_pred5$diabete_change_di, chs_pred5$pred)
+# ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)
+
+```
+
+
+
+# CHS model6: diabete_change_di ~ three random selected features 1000 times
+```{r full model chs, echo=TRUE}
+
+foreach(i = 1:1000) %dopar% {
+  # solar ----------------
+  print(i)
+  sample_id <- sample(1:595,3)
+  
+  chs_data_model <- chs_data %>% 
+    select(diabete_change_di,
+           features[sample_id]) %>%
+     mutate(diabete_change_di = factor(diabete_change_di))
+  
+  # logistic regression
+  fit <- glm(diabete_change_di~.,
+             family = "binomial",
+             data = chs_data_model) 
+  
+  result <- fit %>% tidy(., conf.int = TRUE) %>% 
+    mutate(odds_ratio = exp(estimate),
+           exp_conf_high = exp(conf.high),
+           exp_conf_low = exp(conf.low))
+  
+  prediction <- chs_data_model %>% 
+    dplyr::select(outcomes[2]) %>%
+    dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+  
+  # roc(prediction$diabete_change_di, prediction$pred)
+  # auc(prediction$diabete_change_di, prediction$pred)
+  
+  auc_df <- data_frame(auc = auc(prediction$diabete_change_di, prediction$pred))
+  
+  # write_csv(auc_df,
+  #           fs::path(dir_results, 
+  #                    "prediction",
+  #                    "4_auc_random_features.csv"),
+  #           append = TRUE)
+}
+
+auc_df <- read_csv(fs::path(dir_results, 
+                   "prediction",
+                   "4_auc_random_features.csv"),col_names = FALSE) %>%
+  rename(auc = X1)
+
+auc_df %>% ggplot(aes(x = auc)) + 
+  geom_histogram(fill = "white", color = "black") +
+  labs(title = "Distribution of AUC", x = "AUC", y = "Count") +
+  theme_classic()
+
+ggsave(filename = fs::path(dir_reports, "4_auc_distribution_random_reatures.png"), 
+       width = 10, height = 6, dpi=300)
+
+table1::table1(~., data = auc_df)
+```
+
+# CHS model7: diabete_change_di ~ three random selected features + covars 1000 times
+```{r full model chs, echo=TRUE}
+
+foreach(i = 1:1000) %dopar% {
+  # solar ----------------
+  print(i)
+  sample_id <- sample(1:595,3)
+  
+  chs_data_model <- chs_data %>% 
+    select(diabete_change_di,
+           all_of(covars1),
+           all_of(covars2),
+           features[sample_id]) %>%
+     mutate(diabete_change_di = factor(diabete_change_di))
+  
+  # logistic regression
+  fit <- glm(diabete_change_di~.,
+             family = "binomial",
+             data = chs_data_model) 
+  
+  result <- fit %>% tidy(., conf.int = TRUE) %>% 
+    mutate(odds_ratio = exp(estimate),
+           exp_conf_high = exp(conf.high),
+           exp_conf_low = exp(conf.low))
+  
+  prediction <- chs_data_model %>% 
+    dplyr::select(outcomes[2]) %>%
+    dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+  
+  # roc(prediction$diabete_change_di, prediction$pred)
+  # auc(prediction$diabete_change_di, prediction$pred)
+  
+  auc_df <- data_frame(auc = auc(prediction$diabete_change_di, prediction$pred))
+  
+  # write_csv(auc_df,
+  #           fs::path(dir_results, 
+  #                    "prediction",
+  #                    "4_auc_random_features_covars.csv"),
+  #           append = TRUE)
+}
+
+```
+
+# AUC dataframe of all models in SOLAR and CHS
+```{r}
+auc1_solar <- data.frame(auc = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[2], ci_low = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[1], ci_high = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[3], model = "GRF", cohort = "SOLAR", note = "General Risk Factor")
+
+
+auc2_solar <- data.frame(auc = ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)[2], ci_low = ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)[1], ci_high = ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)[3], model = "GRF + SRF", cohort = "SOLAR", note = "General Risk Factor + Specific Risk Factor")
+
+
+auc3_solar <- data.frame(auc = ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)[2], ci_low = ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)[1], ci_high = ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)[3], model = "GRF + metabolites", cohort = "SOLAR", note = "General Risk Factor + Lasso-selected Metabolite")
+
+auc4_solar <- data.frame(auc = ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)[2], ci_low = ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)[1], ci_high = ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)[3], model = "GRF + SRF + metabolites", cohort = "SOLAR", note = "General Risk Factor + Specific Risk Factor + Lasso-selected Metabolite")
+
+auc5_solar <- data.frame(auc = ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)[2], ci_low = ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)[1], ci_high = ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)[3], model = "metabolites", cohort = "SOLAR", note = "Lasso-selected Metabolite")
+
+auc1_chs<- data.frame(auc = ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)[2], ci_low = ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)[1], ci_high = ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)[3], model = "GRF", cohort = "CHS", note = "General Risk Factor")
+
+auc2_chs<- data.frame(auc = ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)[2], ci_low = ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)[1], ci_high = ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)[3], model = "GRF + SRF", cohort = "CHS", note = "General Risk Factor + Specific Risk Factor")
+
+auc3_chs <- data.frame(auc = ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)[2], ci_low = ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)[1], ci_high = ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)[3], model = "GRF + metabolites", cohort = "CHS", note = "General Risk Factor + Lasso-selected Metabolite")
+
+auc4_chs<- data.frame(auc = ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)[2], ci_low = ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)[1], ci_high = ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)[3], model = "GRF + SRF + metabolites", cohort = "CHS", note = "General Risk Factor + Specific Risk Factor + Lasso-selected Metabolite")
+
+auc5_chs <- data.frame(auc = ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)[2], ci_low = ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)[1], ci_high = ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)[3], model = "metabolites", cohort = "CHS", note = "Lasso-selected Metabolite")
+
+auc <- auc1_solar %>% 
+  bind_rows(auc2_solar) %>%
+  bind_rows(auc3_solar) %>%
+  bind_rows(auc4_solar) %>%
+  bind_rows(auc5_solar) %>%
+  bind_rows(auc1_chs) %>%
+  bind_rows(auc2_chs) %>%
+  bind_rows(auc3_chs) %>%
+  bind_rows(auc4_chs) %>%
+  bind_rows(auc5_chs) %>%
+  mutate(cohort = factor(cohort, levels = c("SOLAR", "CHS")))
+
+# write_csv(auc, 
+#           fs::path(dir_results, 
+#                    "prediction",
+#                    "4_auc_df.csv"))
+```
+

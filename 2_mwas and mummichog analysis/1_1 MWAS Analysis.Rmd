@@ -1,0 +1,127 @@
+---
+title: "MWAS analysis"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{css, echo=FALSE}
+pre {
+  max-height: 200px;
+  overflow-: auto;
+}
+```
+
+## Load data
+```{r feature selection data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+sol_df <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## MWAS Analysis overview
+
+**HEADER**: metabolomics - outcome analysis\
+**NAME OF analysis dataset**: sol_df, chs_df\
+**Type of model**: 
+glm(diabete_change ~ metabolites + covars(sex, bmi, age, hispanic(CHS only),fasting glucose, total cholesterol, triglycerides))\
+**Function/package used to fit the model**: epiomics::owas()
+**EXPOSURES**:
+Metabolomics feature data\
+**OUTCOMES**:
+diabete_change\
+**Covariates**:
+**solar covars**: sex, bmi, age, fasting glucose, total cholesterol, triglycerides (for diabete_change outcome)\
+**chs covars**:sex, bmi, age, hispanic,fasting glucose, total cholesterol, triglycerides\
+
+## MWAS analysis
+```{r mwas analysis, echo = TRUE}
+# variables of outcome, covars, metabolites-----
+outcomes <- c("diabete_change_di")
+
+covars <- c("age_1", 
+            "sex_1", 
+            "bmi_1", 
+            "hisp_1",
+            "og_glu_5_1", 
+            "og_glu120_1",
+            "tot_chol_1",
+            "tag_1")
+
+metabolites <-
+  colnames(solar_ft)[2:ncol(solar_ft)]
+
+# Solar OWAS function----
+sol_df_mwas <- sol_df %>%
+    mutate(diabete_change_di = ifelse(diabete_change_di == "Yes", 1, 0))
+
+mwas_solar <- epiomics::owas(sol_df_mwas,
+                var = outcomes,
+                omics = metabolites,
+                covars = covars[-4],
+                var_exposure_or_outcome = "outcome",
+                family = "binomial",
+                conf_int = TRUE)
+
+saveRDS(mwas_solar,
+        file = fs::path(dir_results,
+                        "1_1 SOLAR mwas results OWAS.rds"))
+
+
+# (1) merge with feature metadata to include the mode variable
+# (2) add significance variable
+mwas_solar <- read_rds(fs::path(dir_results,
+                        "1_1 SOLAR mwas results OWAS.rds"))
+
+# Load Metabolomics Feature Tables 
+ftdata <- read_rds(fs::path(dir_data,
+                   "sol_chs_batch_cor_scaled_untargeted_fts.rds"))
+
+# Obtain Feature metadata 
+ft_metadata <- ftdata$solar %>% 
+  modify(~data.frame(feature = colnames(.)[-1])) %>% 
+  bind_rows(.id = "mode")
+
+mwas_solar1 <- mwas_solar %>% tidylog::left_join(ft_metadata, by = c("feature_name" = "feature")) %>% 
+  mutate(sig = ifelse(p_value < 0.05, "Sig.", "Not Sig."),
+         mode = ifelse(str_detect(mode, "neg"), "negative", "positive")) 
+
+
+# separate mz/rt variables
+mwas_solar2 <- mwas_solar1  %>% mutate(
+                 m.z = str_split_fixed(feature_name, "_", n = 2)[,1] %>%
+                   as.numeric(.),
+                 r.t = str_split_fixed(feature_name, "_", n = 2)[,2] %>%
+                   as.numeric(.))
+
+```
+
+
+## MWAS Analysis Summary of P value
+```{r mwas analysis summary, echo = TRUE}
+# summary table
+(solar_summary_mwas <- mwas_solar2 %>% 
+  group_by(var_name) %>% 
+  summarise(n_features = length(feature_name), 
+            percent_significant_p05 = npct(sig, 
+                                           "Sig.", 
+                                           n.digits = 2))) #1105
+
+rm(mwas_solar, mwas_solar1,
+   solar, sol_df, sol_df_mwas, solar_ft, solar_summary_mwas, temp_mwas)
+```
+
+
+

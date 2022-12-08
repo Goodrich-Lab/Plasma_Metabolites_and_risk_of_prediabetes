@@ -1,0 +1,466 @@
+---
+title: "Data Description"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{r data setup, include = FALSE, echo = FALSE}
+
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Data Loading 
+Two cleaned datasets were loaded in this project.
+One is Metabolomics Feature data, another is Exposure Outcome Data.
+
+```{r data loading, echo = TRUE}
+# Load Metabolomics Feature Tables 
+ftdata <- read_rds(fs::path(dir_data,
+                   "sol_chs_batch_cor_scaled_untargeted_fts.rds"))
+
+# Obtain Feature metadata 
+ft_metadata <- ftdata$solar %>% 
+  modify(~data.frame(feature = colnames(.)[-1])) %>% 
+  bind_rows(.id = "mode")
+
+# Load Exposure Outcome Data from drive  ------------------------
+sol <- read_rds(fs::path(dir_data,
+                         "SOLAR exposure outcome data HRE PFAS.rds"))
+
+chs <- read_rds(fs::path(dir_data_analysis,
+                                  "CHS MetaAir MetaChem Cleaned Redcap and Exposures Outcome Data long V2.rds"))
+```
+
+## Data Preprocessing 
+Preprocess outcome and covariates data for solar cohort
+```{r data preprocessing solar, echo = TRUE, message = FALSE}
+# Step1: create prediabete and diabete varaibles
+# Step2: create diabete_change variable which indicate how sample's diabete status(prediabete, diabete, no diabete) change from first visit to second visit.
+# Step3: create diabete_change_di variable which has two categories: no to no (NO), no to yes(Yes). 
+solar_df <- sol$longitudinal %>%
+  dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
+  mutate(
+    prediabete = case_when(
+    a1c <= 6.4 & a1c >= 5.7 ~ "Yes", 
+    og_glu_5 >= 100 & og_glu_5 <= 125 ~ "Yes",
+    og_glu120 >= 140 & og_glu120 <= 199 ~ "Yes", 
+    is.na(a1c) & is.na(og_glu_5) & is.na(og_glu120) ~ NA_character_,
+    TRUE ~ "No"
+    ), 
+         diabete = case_when(
+           a1c > 6.4 ~ "Yes",
+           og_glu_5 > 125 ~ "Yes",
+           og_glu120 > 199 ~ "Yes",
+           is.na(a1c) & is.na(og_glu_5) & is.na(og_glu120) ~
+             NA_character_,
+           TRUE ~ "No"
+         ),
+    prediabete_or_diabete = case_when(
+      prediabete == "Yes"|diabete == "Yes" ~ "Yes",
+      prediabete == "No" & diabete == "No" ~ "No"
+    )
+  ) %>%
+  mutate(prediabete_or_diabete = as.factor(prediabete_or_diabete))
+
+# pivot wider
+solar_df_w <- solar_df %>% 
+  pivot_wider(
+    names_from = "visit",
+    values_from = og_glu_5:prediabete_or_diabete
+  )
+
+solar_df_w1 <- solar_df_w %>%
+  mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_2 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_2 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_2 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_2 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_2 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_2 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_2 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_2 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_2 == "No" ~ "Diabete to no"))
+
+## Adding missing participants to the data. 
+missing_solar_df_w<- solar_df_w %>%
+  filter(id == "r02_sol_00078"|id == "r02_sol_00178") %>%
+  mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_2 == "No"&
+             prediabete_or_diabete_3 == "No" ~ "No to no",
+           prediabete_2 == "Yes" & 
+             prediabete_3 == "Yes" ~ "Prediabete to prediabete",
+           diabete_2 == "Yes" &
+             diabete_3 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_2 == "No" &
+             prediabete_3 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_2 == "No" &
+             diabete_3 == "Yes" ~ "No to diabete",
+           prediabete_2 == "Yes" &
+             diabete_3 == "Yes" ~ "Prediabete to diabete",
+           prediabete_2 =="Yes" &
+             prediabete_or_diabete_3 == "No" ~ "Prediabete to no",
+           diabete_2 == "Yes" & 
+             prediabete_3 == "Yes" ~ "Diabete to prediabete",
+           diabete_2 == "Yes" &
+             prediabete_or_diabete_3 == "No" ~ "Diabete to no"))
+
+missing_solar_df_w2<- solar_df_w %>%
+  filter(!is.na(og_glu_5_1) & is.na(og_glu_5_2) & !is.na(og_glu_5_3)) %>%
+  mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_3 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_3 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_3 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_3 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_3 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_3 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_3 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_3 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_3 == "No" ~ "Diabete to no"))
+  
+missing_solar_df_w3<- solar_df_w %>%
+  filter(!is.na(og_glu_5_1) & is.na(og_glu_5_2) & 
+           is.na(og_glu_5_3) & !is.na(og_glu_5_4)) %>%
+  mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_4 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_4 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_4 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_4 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_4 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_4 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_4 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_4 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_4 == "No" ~ "Diabete to no"))
+
+missing_solar_df_w4<- solar_df_w %>%
+  filter(!is.na(og_glu_5_1) & is.na(og_glu_5_2) & 
+           is.na(og_glu_5_3) & is.na(og_glu_5_4) &
+           !is.na(og_glu_5_5)) %>%
+  mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_5 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_5 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_5 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_5 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_5 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_5 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_5 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_5 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_5 == "No" ~ "Diabete to no"))
+
+missing_solar_df_w5<- solar_df_w %>%
+  filter(!is.na(og_glu_5_1) & is.na(og_glu_5_2) & 
+           is.na(og_glu_5_3) & is.na(og_glu_5_4) &
+           is.na(og_glu_5_5) & !is.na(og_glu_5_6)) %>%
+    mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_6 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_6 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_6 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_6 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_6 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_6 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_6 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_6 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_6 == "No" ~ "Diabete to no"))
+
+missing_solar_df_w6<- solar_df_w %>%
+  filter(!is.na(og_glu_5_1) & is.na(og_glu_5_2) & 
+           is.na(og_glu_5_3) & is.na(og_glu_5_4) &
+           is.na(og_glu_5_5) & is.na(og_glu_5_6) &
+           !is.na(og_glu_5_7)) %>%
+    mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_7 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_7 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_7 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_7 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_7 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_7 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_7 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_7 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_7 == "No" ~ "Diabete to no"))
+
+solar_df_w1 <- solar_df_w1 %>% 
+  filter(!id %in% missing_solar_df_w$id & 
+           !id %in% missing_solar_df_w2$id & 
+           !id %in% missing_solar_df_w3$id &
+           !id %in% missing_solar_df_w4$id &
+           !id %in% missing_solar_df_w5$id &
+           !id %in% missing_solar_df_w6$id) %>% 
+  bind_rows(missing_solar_df_w) %>%
+  bind_rows(missing_solar_df_w2) %>%
+  bind_rows(missing_solar_df_w3) %>%
+  bind_rows(missing_solar_df_w4) %>%
+  bind_rows(missing_solar_df_w5) %>%
+  bind_rows(missing_solar_df_w6) 
+
+table1::table1(~diabete_change, solar_df_w1)
+
+solar_df_w2<- solar_df_w1 %>% mutate(
+  diabete_change_di = case_when(
+           diabete_change == "No to diabete" ~ "No to Yes",
+           diabete_change == "No to prediabete" ~ "No to Yes",
+           TRUE ~ diabete_change
+         ),
+  diabete_change_di = factor(diabete_change_di))
+```
+
+Preprocess outcome and covars data for chs cohort
+```{r data preprocessing chs, echo = TRUE, message = FALSE}
+chs_df <- chs %>%
+  dplyr::select(id, study, og_glu_5, og_glu120, ma_age, ma_sex, ma_bmi, ma_hisp, total_chol_dori, triglycerides_dori, hba1c) %>%
+  rename(age = ma_age, 
+         sex = ma_sex,
+         bmi = ma_bmi,
+         hisp = ma_hisp,
+         tot_chol = total_chol_dori, 
+         tag = triglycerides_dori,
+         a1c = hba1c) %>%
+  mutate(
+    prediabete = case_when(
+    a1c <= 6.4 & a1c >= 5.7 ~ "Yes", 
+    og_glu_5 >= 100 & og_glu_5 <= 125 ~ "Yes",
+    og_glu120 >= 140 & og_glu120 <= 199 ~ "Yes", 
+    is.na(a1c) & is.na(og_glu_5) & is.na(og_glu120) ~ NA_character_,
+    TRUE ~ "No"
+    ), 
+         diabete = case_when(
+           a1c > 6.4 ~ "Yes",
+           og_glu_5 > 125 ~ "Yes",
+           og_glu120 > 199 ~ "Yes",
+           is.na(a1c) & is.na(og_glu_5) & is.na(og_glu120) ~ NA_character_,
+           TRUE ~ "No"
+         ),
+    prediabete_or_diabete = case_when(
+      prediabete == "Yes"|diabete == "Yes" ~ "Yes",
+      prediabete == "No" & diabete == "No" ~ "No"
+    )
+  ) %>%
+  mutate(prediabete_or_diabete = as.factor(prediabete_or_diabete),
+         visit = ifelse(study == "MetaAir", 1, 2)) %>%
+  select(id, visit, age, everything())
+
+# pivot wider
+chs_df_w <- chs_df %>% 
+  pivot_wider(
+    names_from = "visit",
+    values_from = age:prediabete_or_diabete
+  )
+
+chs_df_w1 <- chs_df_w %>%
+  mutate(
+         diabete_change = case_when(
+           prediabete_or_diabete_1 == "No"&
+             prediabete_or_diabete_2 == "No" ~ "No to no",
+           prediabete_1 == "Yes" & 
+             prediabete_2 == "Yes" ~ "Prediabete to prediabete",
+           diabete_1 == "Yes" &
+             diabete_2 == "Yes" ~ "Diabete to diabete",
+           prediabete_or_diabete_1 == "No" &
+             prediabete_2 == "Yes" ~ "No to prediabete",
+           prediabete_or_diabete_1 == "No" &
+             diabete_2 == "Yes" ~ "No to diabete",
+           prediabete_1 == "Yes" &
+             diabete_2 == "Yes" ~ "Prediabete to diabete",
+           prediabete_1 =="Yes" &
+             prediabete_or_diabete_2 == "No" ~ "Prediabete to no",
+           diabete_1 == "Yes" & 
+             prediabete_2 == "Yes" ~ "Diabete to prediabete",
+           diabete_1 == "Yes" &
+             prediabete_or_diabete_2 == "No" ~ "Diabete to no"
+         ))
+table1::table1(~diabete_change, chs_df_w1)
+chs_df_w2 <- chs_df_w1 %>% 
+  mutate(diabete_change_di = case_when(
+           diabete_change == "No to prediabete" ~ "No to Yes",
+           TRUE ~ diabete_change
+         ),
+         diabete_change_di = factor(diabete_change_di))
+
+# Saving analysis ready dataset------
+# write_rds(chs_df_w2, fs::path(dir_data_analysis, "CHS exposure outcome data HRE PFAS wide.rds"))
+# write_rds(solar_df_w2, fs::path(dir_data_analysis, "SOLAR exposure outcome data HRE PFAS wide.rds"))
+```
+
+Analysis ready feature data
+```{r feature data, echo = TRUE, message = FALSE}
+# Preparing analysis ready feature data------
+# combine four different mode.
+## solar------
+feature_solar <- reduce(ftdata$sol, left_join) %>%
+  mutate(id = as.character(id))
+
+## checking the number of features been imputed
+# feature_solar1<- feature_solar %>%
+#   mutate_at(.vars = vars(colnames(feature_solar)[-1]),
+#             .funs = list(imputed = ~ifelse(abs(.)>abs(mean(.))+ 7*sd(.), 1, 0)))
+# 
+# feature_solar_l <- feature_solar1 %>% select(contains("imputed")) %>%
+#   pivot_longer(cols = colnames(feature_solar1 %>% select(contains("imputed"))),
+#                names_to = "feature",
+#                values_to = "is_imputed") %>%
+#   group_by(feature) %>%
+#   summarise(num_of_imputation = sum(is_imputed)) %>%
+#   ungroup()
+# 
+# feature_solar_imputed_feature_df <- feature_solar_l %>%
+#   filter(num_of_imputation >0) 
+#note: number of features been imputed is 5815. 
+
+
+feature_solar_imputed <- feature_solar %>%
+  mutate_at(.vars = vars(colnames(feature_solar)[-1]),
+            .funs = ~ifelse(abs(.) > abs(mean(.))+ 7*sd(.), mean(.), .))
+
+
+## chs-------
+feature_chs <- reduce(ftdata$chs, left_join) %>%
+  mutate(id = as.character(id))
+
+## checking the number of features been imputed
+# feature_chs1<- feature_chs %>%
+#   mutate_at(.vars = vars(colnames(feature_chs)[-1]),
+#             .funs = list(imputed = ~ifelse(abs(.)>abs(mean(.))+ 7*sd(.), 1, 0)))
+# 
+# feature_chs_l <- feature_chs1 %>% select(contains("imputed")) %>%
+#   pivot_longer(cols = colnames(feature_chs1 %>% select(contains("imputed"))),
+#                names_to = "feature",
+#                values_to = "is_imputed") %>%
+#   group_by(feature) %>%
+#   summarise(num_of_imputation = sum(is_imputed)) %>%
+#   ungroup()
+# 
+# feature_chs_imputed_feature_df <- feature_chs_l %>%
+#   filter(num_of_imputation >0) #2066
+
+feature_chs_imputed <- feature_chs %>%
+  mutate_at(.vars = vars(colnames(feature_chs)[-1]),
+            .funs = ~ifelse(abs(.) > abs(mean(.))+ 7*sd(.), mean(.), .))
+
+# Saving analysis ready feature data------
+# write_rds(feature_solar_imputed, fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+# 
+# write_rds(feature_chs_imputed, fs::path(dir_data_analysis, "CHS feature data all modes.rds"))
+
+rm(solar_df, solar_df_w, solar_df_w1, 
+   sol, chs, chs_df, chs_df_w,
+   chs_df_w1, feature_chs,
+   # feature_solar, 
+   ftdata, missing_solar_df_w, missing_solar_df_w2,
+   missing_solar_df_w3, missing_solar_df_w4, missing_solar_df_w5,
+   missing_solar_df_w6)
+```
+
+## Merge exposure outcome data with feature data
+```{r}
+sol_df <- solar_df_w2 %>% tidylog::left_join(feature_solar_imputed, by = "id")
+chs_df <- chs_df_w2 %>% tidylog::left_join(feature_chs_imputed, by = "id")
+```
+
+
+# Exclude samples with no biobanked fasting plasma, no follow-up visit, prediabetes at baseline and missing total cholesterol and triglyceride
+All continuous features and covariates variables are normalized.
+```{r prepare analysis ready data, echo=TRUE}
+# solar -------
+solar_data <-  sol_df %>% 
+    mutate(across(everything(), as.vector))%>% 
+    filter(diabete_change_di == "No to Yes"|diabete_change_di == "No to no") %>% # include this if outcome is diabete_change_di 
+    mutate(diabete_change_di = ifelse(diabete_change_di == "No to Yes", "Yes", "No")) %>%
+    drop_na(outcomes,
+            all_of(covars1[-4]),
+            all_of(covars2))
+
+print(paste("SOLAR sample size is", dim(solar_data)[1]))
+
+# chs ----------------
+chs_data <- chs_df %>% 
+  mutate(across(everything(), as.vector)) %>% 
+  filter(prediabete_or_diabete_1 == "No") %>% # include this if outcome is diabete_change_di 
+  mutate(diabete_change_di = ifelse(diabete_change_di == "No to Yes", "Yes", "No"),
+         diabete_change_di = factor(diabete_change_di),
+         hisp_1 = factor(hisp_1),
+         sex_1 = ifelse(sex_1 == "female", "Female", "Male")) %>%
+  drop_na(
+          all_of(colnames(feature_chs_imputed)[-1]),
+          outcomes,
+          all_of(covars1),
+          all_of(covars2),
+          diabete_change_di)
+
+print(paste("CHS sample size is", dim(chs_data)[1]))
+
+write_rds(solar_data, fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+write_rds(chs_data, fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+```
+
+

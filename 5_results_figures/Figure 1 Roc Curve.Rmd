@@ -1,0 +1,50 @@
+## Load data
+```{r feature selection data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+sol_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
+```{r}
+png(fs::path(dir_reports,
+             "4_roc_curve_Solar.png"),
+    width = 3000, height = 2000, res = 350)
+plot(roc(solar_pred1$diabete_change_di, solar_pred1$pred), auc.polygon = TRUE,
+     print.auc = FALSE, col = "blue",print.auc.y = 0.3)
+plot(roc(solar_pred2$diabete_change_di, solar_pred2$pred), auc.polygon = TRUE,
+     print.auc = FALSE, col = "red",print.auc.y = 0.5, add = TRUE)
+plot(roc(solar_pred4$diabete_change_di, solar_pred4$pred),
+     print.auc = FALSE, col = "dark green", print.auc.y = 0.9, add = TRUE)
+dev.off()
+
+
+chs_pred4 <- chs_data_model %>% 
+  dplyr::select(outcomes) %>%
+  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
+
+roc(chs_pred4$diabete_change_di, chs_pred4$pred)
+ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)
+
+png(fs::path(dir_reports, 
+             "4_roc_curve_CHS.png"),
+    width = 3000, height = 2000, res = 350)
+plot(roc(chs_pred$diabete_change_di, chs_pred$pred), auc.polygon = TRUE,
+     print.auc = FALSE, col = "blue",print.auc.y = 0.3)
+plot(roc(chs_pred2$diabete_change_di, chs_pred2$pred), auc.polygon = TRUE,
+     print.auc = FALSE, col = "red",print.auc.y = 0.5, add = TRUE)
+plot(roc(solar_pred4$diabete_change_di, solar_pred4$pred),
+     print.auc = FALSE, col = "dark green", print.auc.y = 0.99, add = TRUE)
+dev.off() 
+```
+
