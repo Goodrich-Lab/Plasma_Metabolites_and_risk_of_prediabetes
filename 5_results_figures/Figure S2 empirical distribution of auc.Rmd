@@ -1,5 +1,5 @@
 ---
-title: "Feature selection"
+title: "Empirical Distribution of AUC"
 author: "Hongxu Wang"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
@@ -11,8 +11,8 @@ output:
 ---
 
 
-## Load data
-```{r feature selection data setup, include = FALSE, echo = FALSE}
+
+```{r empirical distribution of auc data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -28,25 +28,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# Preparing analysis ready solar and chs data
-All continuous features and covariates variables are normalized.
-```{r prepare analysis ready data, echo=TRUE}
-# solar -------
-solar_data <- solar_data %>%
-  mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1 ),
-            .funs = list(~scale(.))
-            )
-
-# chs ----------------
-chs_data <- chs_data %>%
-  mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1),
-            .funs = list(~scale(.)))
-```
-
-
-
-# Empirical distribution of AUC
-```{r full model chs, echo=TRUE}
+## Figure S2 Empirical distribution of AUC
+```{r empirical distribution of auc chs, echo=TRUE}
 
 auc_df <- read_csv(fs::path(dir_results, 
                    "prediction",
@@ -70,47 +53,5 @@ ggsave(filename = fs::path(dir_reports, "Figure S2. empirical auc distribution o
 
 # auc7_chs <- data.frame(auc = median(auc_df$auc), ci_low =as.numeric(jag2::qntle_fxn(auc_df$auc, 0.025)), ci_high = as.numeric(jag2::qntle_fxn(auc_df$auc, 0.975)), model = "GRF + SRF + randome metabolites", cohort = "CHS", note = "random selected features + all covars")
 
-```
-
-# AUC dataframe of all models in SOLAR and CHS
-```{r}
-auc1_solar <- data.frame(auc = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[2], ci_low = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[1], ci_high = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[3], model = "GRF", cohort = "SOLAR", note = "General Risk Factor")
-
-
-auc2_solar <- data.frame(auc = ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)[2], ci_low = ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)[1], ci_high = ci.auc(solar_pred2$diabete_change_di, solar_pred2$pred)[3], model = "GRF + SRF", cohort = "SOLAR", note = "General Risk Factor + Specific Risk Factor")
-
-
-auc3_solar <- data.frame(auc = ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)[2], ci_low = ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)[1], ci_high = ci.auc(solar_pred3$diabete_change_di, solar_pred3$pred)[3], model = "GRF + metabolites", cohort = "SOLAR", note = "General Risk Factor + Lasso-selected Metabolite")
-
-auc4_solar <- data.frame(auc = ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)[2], ci_low = ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)[1], ci_high = ci.auc(solar_pred4$diabete_change_di, solar_pred4$pred)[3], model = "GRF + SRF + metabolites", cohort = "SOLAR", note = "General Risk Factor + Specific Risk Factor + Lasso-selected Metabolite")
-
-auc5_solar <- data.frame(auc = ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)[2], ci_low = ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)[1], ci_high = ci.auc(solar_pred5$diabete_change_di, solar_pred5$pred)[3], model = "metabolites", cohort = "SOLAR", note = "Lasso-selected Metabolite")
-
-auc1_chs<- data.frame(auc = ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)[2], ci_low = ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)[1], ci_high = ci.auc(chs_pred1$diabete_change_di, chs_pred1$pred)[3], model = "GRF", cohort = "CHS", note = "General Risk Factor")
-
-auc2_chs<- data.frame(auc = ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)[2], ci_low = ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)[1], ci_high = ci.auc(chs_pred2$diabete_change_di, chs_pred2$pred)[3], model = "GRF + SRF", cohort = "CHS", note = "General Risk Factor + Specific Risk Factor")
-
-auc3_chs <- data.frame(auc = ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)[2], ci_low = ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)[1], ci_high = ci.auc(chs_pred3$diabete_change_di, chs_pred3$pred)[3], model = "GRF + metabolites", cohort = "CHS", note = "General Risk Factor + Lasso-selected Metabolite")
-
-auc4_chs<- data.frame(auc = ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)[2], ci_low = ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)[1], ci_high = ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)[3], model = "GRF + SRF + metabolites", cohort = "CHS", note = "General Risk Factor + Specific Risk Factor + Lasso-selected Metabolite")
-
-auc5_chs <- data.frame(auc = ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)[2], ci_low = ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)[1], ci_high = ci.auc(chs_pred5$diabete_change_di, chs_pred5$pred)[3], model = "metabolites", cohort = "CHS", note = "Lasso-selected Metabolite")
-
-auc <- auc1_solar %>% 
-  bind_rows(auc2_solar) %>%
-  bind_rows(auc3_solar) %>%
-  bind_rows(auc4_solar) %>%
-  bind_rows(auc5_solar) %>%
-  bind_rows(auc1_chs) %>%
-  bind_rows(auc2_chs) %>%
-  bind_rows(auc3_chs) %>%
-  bind_rows(auc4_chs) %>%
-  bind_rows(auc5_chs) %>%
-  mutate(cohort = factor(cohort, levels = c("SOLAR", "CHS")))
-
-# write_csv(auc, 
-#           fs::path(dir_results, 
-#                    "prediction",
-#                    "4_auc_df.csv"))
 ```
 

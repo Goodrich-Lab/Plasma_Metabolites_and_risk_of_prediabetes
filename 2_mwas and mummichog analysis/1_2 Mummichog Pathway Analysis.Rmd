@@ -18,7 +18,7 @@ pre {
 ```
 
 
-```{r, include = FALSE, echo = FALSE}
+```{r pathway analysis data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -52,8 +52,8 @@ for(item in outcomes[2]){
       dplyr::select(m.z, p.value, t.score, r.t, mode)
       write_csv(temp_mwas, 
                 fs::path(dir_results, item,
-                         chrt,
-                         paste(chrt, 
+                         "solar",
+                         paste("solar", 
                                item, 
                                "MWAS.csv",
                                sep = "_")))
@@ -61,38 +61,43 @@ for(item in outcomes[2]){
 ```
 
 ## Run Mummichog
-```{r}
-# To run mummichog analysis, use the data saved above
-#  
-# Then, run mummichog on the metaboanalyst website 
-# (https://www.metaboanalyst.ca/)
-# 
-# Click "start here" --> "functional analysis"
-# you should be prompted to upload a peak list file 
-# 
-# These next steps are important!!!
-# select: 
-# Ion mode: Mixed mode
-# Mass tolerance 5.0
-# Retention time: Yes- seconds
-# Ranked by (1 column only): t-scores
-# Enforce Primary Ions (V2 only): should be selected
-# Click submit
-# 
-# On the next page, you will be prompted to Specify analysis parameters:
-# under Algorithms, select 
-# BOTH Mummichog AND GSEA
-# p-value cutoff: 0.05
-# Version 2.0
-#
-# under "Select a pathway library:"
-##  select Homo sapiens (human) [MFN]	
-## This (should be the defualt)
-## At the bottom of the page, select only pathways containing at least 3 entries
 
-# After you get the results, click "download" on the upper left. Download the 
-# zip file with all results. Unzip file, rename the folder as appropriate, and
-# move to the Results to each corresponding exposures folders here:
-fs::path(dir_results)
-```
+To run mummichog analysis, use the data saved above
+
+Then, run mummichog on the metaboanalyst website (https://www.metaboanalyst.ca/)
+
+Click "start here" --> "functional analysis" you should be prompted to upload a peak list file
+
+These next steps are important!!!
+
+select:
+
+Ion mode: Mixed mode
+
+Mass tolerance 5.0
+
+Retention time: Yes- seconds
+
+Ranked by (1 column only): t-scores
+
+Enforce Primary Ions (V2 only): should be selected
+
+Click submit
+
+On the next page, you will be prompted to Specify analysis parameters:
+
+under Algorithms, select BOTH Mummichog AND GSEA
+
+p-value cutoff: 0.05
+
+Version 2.0
+
+under "Select a pathway library:"
+
+select Homo sapiens (human) [MFN] This (should be the defualt)
+
+At the bottom of the page, select only pathways containing at least 3 entries
+
+After you get the results, click "download" on the upper left. Download the zip file with all results. Unzip file, rename the folder as appropriate, and move to the Results to each corresponding exposures folders here: fs::path(dir_results)
+
 

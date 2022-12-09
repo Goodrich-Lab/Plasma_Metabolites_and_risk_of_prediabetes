@@ -33,7 +33,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# Feature reduction: select annotated features from mummichog
+## Feature reduction: select annotated features from mummichog
 ```{r annotated features, echo=TRUE}
 
 # Get empirical compound to Pathway key from metaboanalyst----
@@ -81,7 +81,7 @@ ecd_pw_key <- tidylog::full_join(pw_ec_key2,
 features <- unique(ecd_pw_key$name) #595
 ```
 
-# Preparing analysis ready solar and chs data
+## Preparing analysis ready solar and chs data
 All continuous features and covariates variables are normalized.
 ```{r prepare analysis ready data, echo=TRUE}
 # solar -------
@@ -91,7 +91,7 @@ solar_data <- solar_data %>%
             )
 ```
 
-# Checking feature selection stability 
+## Checking feature selection stability 
 ```{r}
 solar_data_model <- solar_data %>% 
     select(diabete_change_di, 
@@ -99,61 +99,61 @@ solar_data_model <- solar_data %>%
            all_of(covars1[-4]),
            all_of(covars2))  
   
-foreach(i = 1:5000) %dopar% {
-  # solar ----------------
-  print(i)
-  # Getting strata training and test data.  
-  split <- initial_split(solar_data_model, prob = 0.7, 
-                         strata ="diabete_change_di")
-  
-  train <- training(split) %>% mutate(id = "train")
-
-  y_train <- train %>% dplyr::select(all_of(outcomes)) %>% 
-    as.matrix()
-  
-  x_train <- train %>% 
-    dplyr::select(all_of(features),
-                  all_of(covars1[-4]),
-                  all_of(covars2)
-                  ) %>% 
-    fastDummies::dummy_cols(remove_selected_columns = TRUE,
-                          remove_first_dummy = TRUE) %>%
-    as.matrix()
-  
-  ctrl <- trainControl(
-    method = "cv",
-    number  = 10,
-    classProbs = TRUE,
-    summaryFunction = twoClassSummary
-  )
-
-  fit <- train(
-    x = x_train,
-    y = y_train,
-    method = "glmnet",
-    trControl = ctrl,
-    metric = "ROC",
-    tuneGrid = expand.grid(alpha = 1, lambda = seq(0.001, 0.1, by = 0.001)),
-    penalty.factor = c(rep(1,length(features)), rep(0, 7))
-  )
-  
-  result <- as.data.frame(as.matrix(coef(fit$finalModel, fit$bestTune$lambda))) %>% 
-    rownames_to_column() %>%
-    rename(coef = s1,
-           feature = rowname) %>%
-    mutate(outcome = "diabete_change_di")
-  
-  result_selected_feature <- result %>% filter(coef != 0) 
-  
+# foreach(i = 1:5000) %dopar% {
+#   # solar ----------------
+#   print(i)
+#   # Getting strata training and test data.  
+#   split <- initial_split(solar_data_model, prob = 0.7, 
+#                          strata ="diabete_change_di")
+#   
+#   train <- training(split) %>% mutate(id = "train")
+# 
+#   y_train <- train %>% dplyr::select(all_of(outcomes)) %>% 
+#     as.matrix()
+#   
+#   x_train <- train %>% 
+#     dplyr::select(all_of(features),
+#                   all_of(covars1[-4]),
+#                   all_of(covars2)
+#                   ) %>% 
+#     fastDummies::dummy_cols(remove_selected_columns = TRUE,
+#                           remove_first_dummy = TRUE) %>%
+#     as.matrix()
+#   
+#   ctrl <- trainControl(
+#     method = "cv",
+#     number  = 10,
+#     classProbs = TRUE,
+#     summaryFunction = twoClassSummary
+#   )
+# 
+#   fit <- train(
+#     x = x_train,
+#     y = y_train,
+#     method = "glmnet",
+#     trControl = ctrl,
+#     metric = "ROC",
+#     tuneGrid = expand.grid(alpha = 1, lambda = seq(0.001, 0.1, by = 0.001)),
+#     penalty.factor = c(rep(1,length(features)), rep(0, 7))
+#   )
+#   
+#   result <- as.data.frame(as.matrix(coef(fit$finalModel, fit$bestTune$lambda))) %>% 
+#     rownames_to_column() %>%
+#     rename(coef = s1,
+#            feature = rowname) %>%
+#     mutate(outcome = "diabete_change_di")
+#   
+#   result_selected_feature <- result %>% filter(coef != 0) 
+#   
   # write_csv(result_selected_feature,
   #           fs::path(dir_results,
   #                  "prediction",
   #                  "4_feature_selection_diabete_5000_1122.csv"),
   #           append = TRUE)
-}
+# }
 ```
 
-# Select features
+## Select features
 ```{r}
 ## Load selected feature file
 feature <- read_csv(
@@ -188,7 +188,7 @@ feature_80 <- feature_n %>% filter(count > 0.85*5000)
 selected_feature_name <- feature_80$feature[-c(1:8)] # 3
 ```
 
-# Annotation of the features
+## Annotation of the features
 ```{r annotation, echo=TRUE}
 mzrt_key <- read_rds(fs::path(dir_results,                          "1_4 mummichog_pw_ec_feature_key_with_cpd_names.rds"))
 

@@ -1,5 +1,16 @@
-## Load data
-```{r feature selection data setup, include = FALSE, echo = FALSE}
+---
+title: "ROC curves"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{r roc curve data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -15,8 +26,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
-```{r}
+## Figure 1 ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
+```{r roc curve, echo=TRUE}
 png(fs::path(dir_reports,
              "4_roc_curve_Solar.png"),
     width = 3000, height = 2000, res = 350)

@@ -13,7 +13,7 @@ pre {
 ```
 
 
-```{r, include = FALSE, echo = FALSE}
+```{r annotation, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 
@@ -21,7 +21,7 @@ options(knitr.table.format = "html")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Combined compounds from mummichog
+## Create annotated metabolites complete file
 ```{r combined compounds, include = FALSE, echo = FALSE}
 
 # 1) Read in long mum results-----------------
@@ -107,9 +107,9 @@ ecd_pw_key_final <- ecd_pw_key_2 %>%
   ungroup()
 
 # Save final Key
-write_rds(ecd_pw_key_final,
-          fs::path(
-            dir_results,
-            "1_4 mummichog_pw_ec_feature_key_with_cpd_names.rds"))
+# write_rds(ecd_pw_key_final,
+#           fs::path(
+#             dir_results,
+#             "1_4 mummichog_pw_ec_feature_key_with_cpd_names.rds"))
 ```
 

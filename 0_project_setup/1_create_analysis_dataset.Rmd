@@ -34,7 +34,7 @@ ft_metadata <- ftdata$solar %>%
   modify(~data.frame(feature = colnames(.)[-1])) %>% 
   bind_rows(.id = "mode")
 
-# Load Exposure Outcome Data from drive  ------------------------
+# Load Exposure Outcome Data 
 sol <- read_rds(fs::path(dir_data,
                          "SOLAR exposure outcome data HRE PFAS.rds"))
 
@@ -46,7 +46,7 @@ chs <- read_rds(fs::path(dir_data_analysis,
 Preprocess outcome and covariates data for solar cohort
 ```{r data preprocessing solar, echo = TRUE, message = FALSE}
 # Step1: create prediabete and diabete varaibles
-# Step2: create diabete_change variable which indicate how sample's diabete status(prediabete, diabete, no diabete) change from first visit to second visit.
+# Step2: create diabete_change variable which indicate how participants' diabete status(prediabete, diabete, no diabete) change from first visit to second visit.
 # Step3: create diabete_change_di variable which has two categories: no to no (NO), no to yes(Yes). 
 solar_df <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
@@ -421,13 +421,15 @@ rm(solar_df, solar_df_w, solar_df_w1,
 ```
 
 ## Merge exposure outcome data with feature data
-```{r}
+```{r merge data, echo=TRUE, message=FALSE}
 sol_df <- solar_df_w2 %>% tidylog::left_join(feature_solar_imputed, by = "id")
 chs_df <- chs_df_w2 %>% tidylog::left_join(feature_chs_imputed, by = "id")
 ```
 
 
-# Exclude samples with no biobanked fasting plasma, no follow-up visit, prediabetes at baseline and missing total cholesterol and triglyceride
+## Prepare analysis ready data
+Exclude participants with no biobanked fasting plasma, no follow-up visit, prediabetes at baseline and missing total cholesterol and triglyceride
+
 All continuous features and covariates variables are normalized.
 ```{r prepare analysis ready data, echo=TRUE}
 # solar -------
@@ -458,9 +460,9 @@ chs_data <- chs_df %>%
 
 print(paste("CHS sample size is", dim(chs_data)[1]))
 
-write_rds(solar_data, fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
-
-write_rds(chs_data, fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+# write_rds(solar_data, fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+# 
+# write_rds(chs_data, fs::path(dir_data_analysis, "CHS analysis full data.rds"))
 ```
 
 

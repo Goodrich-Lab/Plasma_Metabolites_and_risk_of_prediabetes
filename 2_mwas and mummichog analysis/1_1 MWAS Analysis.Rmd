@@ -17,8 +17,8 @@ pre {
 }
 ```
 
-## Load data
-```{r feature selection data setup, include = FALSE, echo = FALSE}
+
+```{r mwas data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -75,9 +75,9 @@ mwas_solar <- epiomics::owas(sol_df_mwas,
                 family = "binomial",
                 conf_int = TRUE)
 
-saveRDS(mwas_solar,
-        file = fs::path(dir_results,
-                        "1_1 SOLAR mwas results OWAS.rds"))
+# saveRDS(mwas_solar,
+#         file = fs::path(dir_results,
+#                         "1_1 SOLAR mwas results OWAS.rds"))
 
 
 # (1) merge with feature metadata to include the mode variable
@@ -119,8 +119,8 @@ mwas_solar2 <- mwas_solar1  %>% mutate(
                                            "Sig.", 
                                            n.digits = 2))) #1105
 
-rm(mwas_solar, mwas_solar1,
-   solar, sol_df, sol_df_mwas, solar_ft, solar_summary_mwas, temp_mwas)
+# rm(mwas_solar, mwas_solar1, solar_data, 
+#     sol_df, sol_df_mwas, solar_ft, solar_summary_mwas, )
 ```
 
 

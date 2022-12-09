@@ -12,7 +12,7 @@ output:
 
 
 ## Load data
-```{r feature selection data setup, include = FALSE, echo = FALSE}
+```{r models comparison data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -28,7 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-# Preparing analysis ready solar and chs data
+## Preparing analysis ready solar and chs data
 All continuous features and covariates variables are normalized.
 ```{r prepare analysis ready data, echo=TRUE}
 # solar -------
@@ -44,8 +44,8 @@ chs_data <- chs_data %>%
 ```
 
 
-# Solar Model1:  general risk factors
-```{r}
+## Solar Model1:  general risk factors
+```{r grf solar, echo=TRUE}
 solar_data_model <- solar_data %>% 
   select(diabete_change_di,
          all_of(covars1[-4])) %>%
@@ -70,8 +70,8 @@ solar_pred1<- solar_data %>%
 # vif(fit)
 ```
 
-# Solar Model2: diabete_change_di ~ general risk factors + specific risk factors
-```{r}
+## Solar Model2: diabete_change_di ~ general risk factors + specific risk factors
+```{r grf srf solar, echo=TRUE}
 solar_data_model <- solar_data %>% 
   select(diabete_change_di,
          all_of(covars1[-4]),
@@ -98,8 +98,8 @@ solar_pred2<- solar_data_model %>%
 ```
 
 
-# SOLAR model3: diabete_change_di ~ general risk factors + lasso-selected metabolites
-```{r full model chs, echo=TRUE}
+## SOLAR model3: diabete_change_di ~ general risk factors + lasso-selected metabolites
+```{r grf met solar, echo=TRUE}
 solar_data_model <- solar_data %>% 
   select(diabete_change_di,
          all_of(selected_feature_name),
@@ -129,8 +129,8 @@ solar_pred3 <- solar_data_model %>%
 ```
 
 
-# SOLAR Model4: diabete_change_di ~ general risk factors + specific risk factors + lasso-selected metabolites
-```{r}
+## SOLAR Model4: diabete_change_di ~ general risk factors + specific risk factors + lasso-selected metabolites
+```{r grf srf met, echo= TRUE}
 solar_data_model <- solar_data %>% 
     select(diabete_change_di, 
            all_of(selected_feature_name), 
@@ -169,8 +169,8 @@ solar_pred4 <- solar_data_model %>%
 ```
 
 
-# SOLAR model5: diabete_change_di ~ selected features
-```{r full model chs, echo=TRUE}
+## SOLAR model5: diabete_change_di ~ selected features
+```{r met solar, echo=TRUE}
 solar_data_model <- solar_data %>% 
   select(diabete_change_di,
          all_of(selected_feature_name)) %>%
@@ -196,8 +196,8 @@ solar_pred5 <- solar_data_model %>%
 ```
 
 
-# CHS model1: diabete_change_di~ basic covars
-```{r}
+## CHS model1:  general risk factors 
+```{r grf chs, echo=TRUE}
 chs_data_model <- chs_data %>% 
   select(diabete_change_di,
          all_of(covars1)) 
@@ -226,8 +226,8 @@ chs_pred1<- chs_data %>%
 # vif(fit_covars)
 ```
 
-# CHS model2: diabete_change_di~ basic covars + clinical covars
-```{r}
+## CHS model2: general risk factors + specific risk factors
+```{r grf srf chs, echo=TRUE}
 chs_data_model <- chs_data %>% 
   select(diabete_change_di,
          all_of(covars1),
@@ -256,8 +256,9 @@ chs_pred2<- chs_data %>%
 # 
 # vif(fit)
 ```
-# CHS model3: diabete_change_di ~ general risk factors + selected metabolites
-```{r full model chs, echo=TRUE}
+
+## CHS model3: general risk factors + selected metabolites
+```{r grf met chs, echo=TRUE}
 chs_data_model <- chs_data %>% 
   select(diabete_change_di,
          all_of(selected_feature_name),
@@ -286,8 +287,8 @@ chs_pred3 <- chs_data_model %>%
 ```
 
 
-# CHS model4: diabete_change_di ~ general risk factors + specific risk factors + selected features
-```{r full model chs, echo=TRUE}
+## CHS model4: general risk factors + specific risk factors + selected features
+```{r grf srf met chs, echo=TRUE}
 chs_data_model <- chs_data %>%
   select(diabete_change_di,
          all_of(selected_feature_name),
@@ -324,8 +325,8 @@ chs_pred4 <- chs_data_model %>%
 
 ```
 
-# CHS model5: diabete_change_di ~ selected metabolites
-```{r full model chs, echo=TRUE}
+# CHS model5: selected metabolites
+```{r met chs, echo=TRUE}
 chs_data_model <- chs_data %>% 
   select(diabete_change_di,
          all_of(selected_feature_name)) %>%
@@ -354,7 +355,7 @@ chs_pred5 <- chs_data_model %>%
 
 
 # CHS model6: diabete_change_di ~ three random selected features 1000 times
-```{r full model chs, echo=TRUE}
+```{r random feature chs, echo=TRUE}
 
 foreach(i = 1:1000) %dopar% {
   # solar ----------------
@@ -402,14 +403,15 @@ auc_df %>% ggplot(aes(x = auc)) +
   labs(title = "Distribution of AUC", x = "AUC", y = "Count") +
   theme_classic()
 
-ggsave(filename = fs::path(dir_reports, "4_auc_distribution_random_reatures.png"), 
-       width = 10, height = 6, dpi=300)
+# ggsave(filename = fs::path(dir_reports, "4_auc_distribution_random_reatures.png"), 
+#        width = 10, height = 6, dpi=300)
 
 table1::table1(~., data = auc_df)
 ```
 
-# CHS model7: diabete_change_di ~ three random selected features + covars 1000 times
-```{r full model chs, echo=TRUE}
+
+# CHS model7: diabete_change_di ~ three random selected features + grf + srf 1000 times
+```{r random feature and covars chs, echo=TRUE}
 
 foreach(i = 1:1000) %dopar% {
   # solar ----------------
@@ -451,8 +453,8 @@ foreach(i = 1:1000) %dopar% {
 
 ```
 
-# AUC dataframe of all models in SOLAR and CHS
-```{r}
+## AUC dataframe of all models in SOLAR and CHS
+```{r aucs of models, echo=TRUE}
 auc1_solar <- data.frame(auc = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[2], ci_low = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[1], ci_high = ci.auc(solar_pred1$diabete_change_di, solar_pred1$pred)[3], model = "GRF", cohort = "SOLAR", note = "General Risk Factor")
 
 
@@ -491,5 +493,7 @@ auc <- auc1_solar %>%
 #           fs::path(dir_results, 
 #                    "prediction",
 #                    "4_auc_df.csv"))
+
+auc
 ```
 

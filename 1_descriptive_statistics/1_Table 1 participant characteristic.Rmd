@@ -17,7 +17,6 @@ pre {
 }
 ```
 
-## Load data
 ```{r feature selection data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))

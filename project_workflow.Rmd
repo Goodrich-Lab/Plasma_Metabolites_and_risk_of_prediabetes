@@ -21,18 +21,66 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-# 2. Analysis
-```{r child =fs::path(here::here(),"1_analysis","MWAS Analysis.Rmd")}
+# 2. Descriptive statistic -- Participant characteristic
+```{r child =fs::path(here::here(),"1_descriptive_statistics","1_Table 1 participant characteristic.Rmd")}
 
 ```
 
-```{r child =fs::path(here::here(),"1_analysis","Mummichog Pathway Analysis.Rmd")}
+
+# 3. MWAS Analysis
+```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_1 MWAS Analysis.Rmd")}
 
 ```
 
-```{r child =fs::path(here::here(),"1_analysis","Mummichog Result Figure.Rmd")}
+# 4. Mummichog pathway analysis
+```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_2 Mummichog Pathway Analysis.Rmd")}
 
 ```
 
----
 
+# 5. Mummichog result organization
+```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_3 Mummichog Result.Rmd")}
+
+```
+
+
+# 6. Annotation of metabolites
+```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_4 Create Final Annotated Metabolites.Rmd")}
+
+```
+
+# 7. Feature selectiong
+```{r child =fs::path(here::here(),"3_feature_selection","3_ Feature selection.Rmd")}
+
+```
+
+
+# 8. Prediction models
+```{r  child =fs::path(here::here(),"4_prediction models","4_ Models Comparison.Rmd")}
+
+```
+
+
+# 9. Prepare Result Figure
+## 1) ROC curves
+```{r  child =fs::path(here::here(),"5_results_figures","Figure 1 Roc Curve.Rmd")}
+
+```
+
+
+## 2) AUC comparison
+```{r  child =fs::path(here::here(),"5_results_figures","Figure 2 AUC comparison.Rmd")}
+
+```
+
+
+## 3) Coefficient plot
+```{r  child =fs::path(here::here(),"5_results_figures","Figure 3 Coefficient plot.Rmd")}
+
+```
+
+
+## 4) Empirical distribution of AUC
+```{r  child =fs::path(here::here(),"5_results_figures","Figure S2 empirical distribution of auc.Rmd")}
+
+```

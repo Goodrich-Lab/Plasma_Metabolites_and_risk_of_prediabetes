@@ -1,5 +1,5 @@
 ---
-title: "Feature selection"
+title: "Correlation plot"
 author: "Hongxu Wang"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
@@ -18,7 +18,7 @@ pre {
 ```
 
 
-## Load data
+
 ```{r feature selection data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
@@ -34,7 +34,7 @@ options(knitr.table.format = "html")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# LASSO-selected features
+## LASSO-selected features
 ```{r}
 ## Load selected feature file
 feature <- read_csv(
@@ -69,7 +69,7 @@ feature_80 <- feature_n %>% filter(count > 0.85*5000)
 selected_feature_name <- feature_80$feature[-c(1:8)] # 3
 ```
 
-# Correlation of the features and covars
+## Correlation of the features and covars
 ```{r}
 chs_cor <- chs_data %>%
   mutate(sex_1 = ifelse(sex_1 == "Female", 1, 2)) %>%
@@ -123,14 +123,14 @@ corrplot(corr_chs, type="lower",
          tl.cex=0.5, number.cex=0.5)
 dev.off()
 
-png(fs::path(dir_reports, "Figure S1 correlation_plot_covars_features_solar.png"),
-    width = 2000, height = 2000, res = 350)
-corrplot(corr_solar, type="lower",
-         col=brewer.pal(n=8, name="Blues"),
-         title = "",
-         method = "color",
-         addCoef.col = "black",
-         tl.cex=0.5, number.cex=0.5)
-dev.off()
+# png(fs::path(dir_reports, "Figure S1 correlation_plot_covars_features_solar.png"),
+#     width = 2000, height = 2000, res = 350)
+# corrplot(corr_solar, type="lower",
+#          col=brewer.pal(n=8, name="Blues"),
+#          title = "",
+#          method = "color",
+#          addCoef.col = "black",
+#          tl.cex=0.5, number.cex=0.5)
+# dev.off()
 ```
 
