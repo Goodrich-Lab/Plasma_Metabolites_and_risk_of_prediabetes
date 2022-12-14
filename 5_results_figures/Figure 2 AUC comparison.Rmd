@@ -61,8 +61,9 @@ auc %>%
         # axis.title.y=element_blank(),
         axis.line.y = element_line(color = "black"),
         legend.title = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust=1))
+        axis.text.x = element_text(angle = 45, hjust=1)) +
+  scale_color_manual(values = c("#E1BE6A", "#40B0A6"))
 
-# ggsave(filename = fs::path(dir_reports, "Figure 4. Prediction performance of models.jpg"), 
-#        width = 8, height = 4, dpi=300)
+ggsave(filename = fs::path(dir_reports, "Figure 2. Prediction performance of models.jpg"),
+       width = 8, height = 4, dpi=300)
 ```

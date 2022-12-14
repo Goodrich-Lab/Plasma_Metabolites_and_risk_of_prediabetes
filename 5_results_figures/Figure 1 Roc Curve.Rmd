@@ -28,34 +28,36 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Figure 1 ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
 ```{r roc curve, echo=TRUE}
-png(fs::path(dir_reports,
-             "4_roc_curve_Solar.png"),
+png(fs::path(dir_reports, 
+             "4_roc_curve_solar.png"),
     width = 3000, height = 2000, res = 350)
-plot(roc(solar_pred1$diabete_change_di, solar_pred1$pred), auc.polygon = TRUE,
-     print.auc = FALSE, col = "blue",print.auc.y = 0.3)
-plot(roc(solar_pred2$diabete_change_di, solar_pred2$pred), auc.polygon = TRUE,
-     print.auc = FALSE, col = "red",print.auc.y = 0.5, add = TRUE)
-plot(roc(solar_pred4$diabete_change_di, solar_pred4$pred),
-     print.auc = FALSE, col = "dark green", print.auc.y = 0.9, add = TRUE)
-dev.off()
+plot.roc(solar_pred1$diabete_change_di, solar_pred1$pred,
+     print.auc = FALSE, col = "#88CCEE", print.auc.y = 0.3, legacy.axes = TRUE)
+plot.roc(solar_pred2$diabete_change_di, solar_pred2$pred, 
+     print.auc = FALSE, col = "#DDCC77", print.auc.y = 0.4, add = TRUE)
+plot.roc(solar_pred4$diabete_change_di,  solar_pred4$pred,
+     print.auc = FALSE, col = "#CC6677", print.auc.y = 0.5, add = TRUE)
+legend("bottomright", 
+       legend = c("Model 1", "Model 2", "Model 3"),
+       col = c("#88CCEE", "#DDCC77", "#CC6677"),
+       lty = c(1,1,1))
+dev.off() 
 
-
-chs_pred4 <- chs_data_model %>% 
-  dplyr::select(outcomes) %>%
-  dplyr::mutate(pred = data.frame(pred = predict(fit, type = "response"))$pred)
-
-roc(chs_pred4$diabete_change_di, chs_pred4$pred)
-ci.auc(chs_pred4$diabete_change_di, chs_pred4$pred)
 
 png(fs::path(dir_reports, 
              "4_roc_curve_CHS.png"),
     width = 3000, height = 2000, res = 350)
-plot(roc(chs_pred$diabete_change_di, chs_pred$pred), auc.polygon = TRUE,
-     print.auc = FALSE, col = "blue",print.auc.y = 0.3)
-plot(roc(chs_pred2$diabete_change_di, chs_pred2$pred), auc.polygon = TRUE,
-     print.auc = FALSE, col = "red",print.auc.y = 0.5, add = TRUE)
-plot(roc(solar_pred4$diabete_change_di, solar_pred4$pred),
-     print.auc = FALSE, col = "dark green", print.auc.y = 0.99, add = TRUE)
+plot.roc(chs_pred1$diabete_change_di, chs_pred1$pred,
+     print.auc = FALSE, col = "#88CCEE", print.auc.y = 0.3, legacy.axes = TRUE)
+plot.roc(chs_pred2$diabete_change_di, chs_pred2$pred, 
+     print.auc = FALSE, col = "#DDCC77", print.auc.y = 0.4, add = TRUE)
+plot.roc(chs_pred4$diabete_change_di,  chs_pred4$pred,
+     print.auc = FALSE, col = "#CC6677", print.auc.y = 0.5, add = TRUE)
+legend("bottomright", 
+       legend = c("Model 1", "Model 2", "Model 3"),
+       col = c("#88CCEE", "#DDCC77", "#CC6677"),
+       lty = c(1,1,1))
 dev.off() 
+
 ```
 
