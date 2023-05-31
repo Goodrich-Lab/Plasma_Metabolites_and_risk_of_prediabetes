@@ -26,16 +26,34 @@ solar_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds
 
 chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
 
+solar_data_new <- read_rds(fs::path(dir_data, "SOL_exposure_outcome_data_v3.rds")) %>%
+  filter(visit == 1)%>% 
+  select(id, tanner, hdl_chol, ldl_chol, vldl_chol)
+
+chs_data_new <- read_rds(fs::path(dir_data, 
+                                  "CHS MetaAir MetaChem Cleaned Redcap and Exposures Outcome Data wide V3.rds"))%>%
+  select(id, ma_hdl_dori, ma_ldl_dori, ma_vldl_dori)
+
+solar_data1 <- solar_data %>% 
+  tidylog::left_join(solar_data_new, by = "id")
+
+chs_data1 <- chs_data %>%
+  tidylog::left_join(chs_data_new, by = "id")
+
 options(knitr.table.format = "html")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Descriptive statistics 
-```{r descriptive statistic, echo = TRUE}
 
-table1::table1(~ age_1 + sex_1 + bmi_1 + og_glu_5_1 + og_glu120_1 + tot_chol_1 + tag_1+ diabete_change_di + diabete_change, data = solar_data)
+### SOLAR
+```{r descriptive statistic SOLAR, echo = TRUE}
+table1::table1(~ age_1 + sex_1 + bmi_1 + og_glu_5_1 + og_glu120_1 + tot_chol_1 + tag_1+ diabete_change_di + diabete_change + hdl_chol + ldl_chol + vldl_chol + tanner , data = solar_data1)
+```
 
-table1::table1(~ age_1 + sex_1 + bmi_1 + hisp_1 + og_glu_5_1 + og_glu120_1 + tot_chol_1 + tag_1+ diabete_change_di + diabete_change, data = chs_data )
+### CHS
+```{r descriptive statistic CHS, echo = TRUE}
+table1::table1(~ age_1 + sex_1 + bmi_1 + hisp_1 + og_glu_5_1 + og_glu120_1 + tot_chol_1 + tag_1+ diabete_change_di + diabete_change + ma_hdl_dori + ma_ldl_dori + ma_vldl_dori, data = chs_data1 )
 ```
 
 

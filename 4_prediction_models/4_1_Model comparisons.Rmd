@@ -609,7 +609,15 @@ result_df <- fit %>% tidy(conf.int = TRUE) %>%
          model = "GRF + SRF + metabolites",
          odds_ratio = exp(estimate),
          exp_conf_high = exp(conf.high),
-         exp_conf_low = exp(conf.low))
+         exp_conf_low = exp(conf.low)) 
+
+result_df_solar <- result_df %>% 
+  mutate(met_name_first = case_when(term == "`515.287209133297_215.197333996352`" ~ "Taurocholic acid",
+                                    term ==                  "`214.026117480542_35.1421775112176`" ~ "Allylphenol sulfate",
+                                    term ==  "`125.097384256509_58.1004384860803`" ~ "Caprylic acid"))
+  
+  
+write_csv(result_df_solar, fs::path(dir_results,"prediction", "4_solar_model_result_with_annotation_0530.csv"))
 
 ## grf
 fit_grf <- glm(as.formula(str_c("diabete_change_di ~", str_c(covars1[-4], collapse = "+"))),
@@ -700,6 +708,14 @@ result_df <- fit %>% tidy(conf.int = TRUE) %>%
          odds_ratio = exp(estimate),
          exp_conf_high = exp(conf.high),
          exp_conf_low = exp(conf.low))
+
+result_df_chs <- result_df %>% 
+  mutate(met_name_first = case_when(term == "`515.287209133297_215.197333996352`" ~ "Taurocholic acid",
+                                    term ==                  "`214.026117480542_35.1421775112176`" ~ "Allylphenol sulfate",
+                                    term ==  "`125.097384256509_58.1004384860803`" ~ "Caprylic acid"))
+  
+  
+write_csv(result_df_chs, fs::path(dir_results,"prediction", "4_chs_model_result_with_annotation_0530.csv"))
 
 ## grf
 fit_grf <- glm(as.formula(str_c("diabete_change_di ~", str_c(covars1, collapse = "+"))),
