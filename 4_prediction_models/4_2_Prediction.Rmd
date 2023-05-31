@@ -79,7 +79,7 @@ chs <- read_rds(fs::path(dir_data_analysis,
 ```
 
 
-## Original defination of the outcome
+## Prepared analysis data - Prediabetes/T2D
 ```{r solar prepare analysis data original outcome, echo = TRUE, message = FALSE}
 solar_df <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
