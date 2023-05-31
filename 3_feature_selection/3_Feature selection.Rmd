@@ -99,58 +99,58 @@ solar_data_model <- solar_data %>%
            all_of(covars1[-4]),
            all_of(covars2))  
   
-foreach(i = 1:5000) %dopar% {
-  # solar ----------------
-  print(i)
-  # Getting strata training and test data.
-  split <- initial_split(solar_data_model, prob = 0.7,
-                         strata ="diabete_change_di")
-
-  train <- training(split) %>% mutate(id = "train")
-
-  y_train <- train %>% dplyr::select(all_of(outcomes)) %>%
-    as.matrix()
-
-  x_train <- train %>%
-    dplyr::select(all_of(features),
-                  all_of(covars1[-4]),
-                  all_of(covars2)
-                  ) %>%
-    fastDummies::dummy_cols(remove_selected_columns = TRUE,
-                          remove_first_dummy = TRUE) %>%
-    as.matrix()
-
-  ctrl <- trainControl(
-    method = "cv",
-    number  = 10,
-    classProbs = TRUE,
-    summaryFunction = twoClassSummary
-  )
-
-  fit <- train(
-    x = x_train,
-    y = y_train,
-    method = "glmnet",
-    trControl = ctrl,
-    metric = "ROC",
-    tuneGrid = expand.grid(alpha = 1, lambda = seq(0.001, 0.1, by = 0.001)),
-    penalty.factor = c(rep(1,length(features)), rep(0, 7))
-  )
-
-  result <- as.data.frame(as.matrix(coef(fit$finalModel, fit$bestTune$lambda))) %>%
-    rownames_to_column() %>%
-    rename(coef = s1,
-           feature = rowname) %>%
-    mutate(outcome = "diabete_change_di")
-
-  result_selected_feature <- result %>% filter(coef != 0)
-
-write_csv(result_selected_feature,
-          fs::path(dir_results,
-                 "prediction",
-                 "4_feature_selection_diabete_5000_1122.csv"),
-          append = TRUE)
-}
+# foreach(i = 1:5000) %dopar% {
+#   # solar ----------------
+#   print(i)
+#   # Getting strata training and test data.
+#   split <- initial_split(solar_data_model, prob = 0.7,
+#                          strata ="diabete_change_di")
+# 
+#   train <- training(split) %>% mutate(id = "train")
+# 
+#   y_train <- train %>% dplyr::select(all_of(outcomes)) %>%
+#     as.matrix()
+# 
+#   x_train <- train %>%
+#     dplyr::select(all_of(features),
+#                   all_of(covars1[-4]),
+#                   all_of(covars2)
+#                   ) %>%
+#     fastDummies::dummy_cols(remove_selected_columns = TRUE,
+#                           remove_first_dummy = TRUE) %>%
+#     as.matrix()
+# 
+#   ctrl <- trainControl(
+#     method = "cv",
+#     number  = 10,
+#     classProbs = TRUE,
+#     summaryFunction = twoClassSummary
+#   )
+# 
+#   fit <- train(
+#     x = x_train,
+#     y = y_train,
+#     method = "glmnet",
+#     trControl = ctrl,
+#     metric = "ROC",
+#     tuneGrid = expand.grid(alpha = 1, lambda = seq(0.001, 0.1, by = 0.001)),
+#     penalty.factor = c(rep(1,length(features)), rep(0, 7))
+#   )
+# 
+#   result <- as.data.frame(as.matrix(coef(fit$finalModel, fit$bestTune$lambda))) %>%
+#     rownames_to_column() %>%
+#     rename(coef = s1,
+#            feature = rowname) %>%
+#     mutate(outcome = "diabete_change_di")
+# 
+#   result_selected_feature <- result %>% filter(coef != 0)
+# 
+# write_csv(result_selected_feature,
+#           fs::path(dir_results,
+#                  "prediction",
+#                  "4_feature_selection_diabete_5000_1122.csv"),
+#           append = TRUE)
+# }
 ```
 
 ## Selected features
@@ -173,9 +173,9 @@ feature_n <- feature %>%
   arrange(desc(count)) %>%
   mutate(percentage = count/5000)
 
-write_csv(feature_n,fs::path(dir_results, 
-                   "prediction",
-                   "4_feature_selection_percentage.csv"))
+# write_csv(feature_n,fs::path(dir_results, 
+#                    "prediction",
+#                    "4_feature_selection_percentage.csv"))
 # feature_n %>% filter(!feature %in% c(covars1, covars2, "sex_1_Male") & feature != "(Intercept)"& percentage > 0.25) %>% ggplot(aes(x=percentage)) + 
 #   geom_vline(aes(xintercept = 0.85), color = "blue", linetype = "dashed")+
 #   # geom_vline(aes(xintercept = 0.9), color = "blue", linetype = "dashed")+

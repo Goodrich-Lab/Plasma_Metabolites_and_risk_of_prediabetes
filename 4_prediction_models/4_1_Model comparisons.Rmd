@@ -26,7 +26,7 @@ pre {
 **1. Three predictive metabolites selected in feature selection process**
 **2. Two predictive metabolites which showed consistent direction of association in the discovery and validation cohort**
 
-```{r data setup, include = FALSE, echo = FALSE}
+```{r model comparisons data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -597,7 +597,7 @@ solar_data_model <- data_analysis %>%
 
 
 table(solar_data_model$diabete_change_di)
-#93 21
+#105 38
 
 # logistic regression----
 ## full mode
@@ -617,7 +617,7 @@ result_df_solar <- result_df %>%
                                     term ==  "`125.097384256509_58.1004384860803`" ~ "Caprylic acid"))
   
   
-write_csv(result_df_solar, fs::path(dir_results,"prediction", "4_solar_model_result_with_annotation_0530.csv"))
+# write_csv(result_df_solar, fs::path(dir_results,"prediction", "4_solar_model_result_with_annotation_0530.csv"))
 
 ## grf
 fit_grf <- glm(as.formula(str_c("diabete_change_di ~", str_c(covars1[-4], collapse = "+"))),
@@ -674,7 +674,7 @@ solar_pred <- solar_data_model %>%
                 pred_met = data.frame(pred = predict(fit_met, type = "response"))$pred) %>% bind_cols(data_analysis %>% select(id))
 ```
 
-```{r chs model igt}
+```{r chs model prediabetes}
 chs_df_outcome <-  chs_df_finalvisit %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1 %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
@@ -715,7 +715,7 @@ result_df_chs <- result_df %>%
                                     term ==  "`125.097384256509_58.1004384860803`" ~ "Caprylic acid"))
   
   
-write_csv(result_df_chs, fs::path(dir_results,"prediction", "4_chs_model_result_with_annotation_0530.csv"))
+# write_csv(result_df_chs, fs::path(dir_results,"prediction", "4_chs_model_result_with_annotation_0530.csv"))
 
 ## grf
 fit_grf <- glm(as.formula(str_c("diabete_change_di ~", str_c(covars1, collapse = "+"))),
@@ -774,7 +774,7 @@ chs_pred <- chs_data_model %>%
 ```
 
 ## AUC of all models - prediabetes
-```{r solar aucs of models, echo=TRUE}
+```{r solar aucs of models prediabetes, echo=TRUE}
 auc1_solar <- data.frame(auc = ci.auc(solar_pred$diabete_change_di, solar_pred$pred_grf)[2], ci_low = ci.auc(solar_pred$diabete_change_di, solar_pred$pred_grf)[1], ci_high = ci.auc(solar_pred$diabete_change_di, solar_pred$pred_grf)[3], model = "GRF", cohort = "SOLAR (discovery)", note = "General Risk Factor")
 
 auc2_solar <- data.frame(auc = ci.auc(solar_pred$diabete_change_di, solar_pred$pred_grf_srf)[2], ci_low = ci.auc(solar_pred$diabete_change_di, solar_pred$pred_grf_srf)[1], ci_high = ci.auc(solar_pred$diabete_change_di, solar_pred$pred_grf_srf)[3], model = "GRF + SRF", cohort = "SOLAR (discovery)", note = "General Risk Factor + Specific Risk Factor")
@@ -795,7 +795,7 @@ auc_solar <- auc1_solar %>%
 
 ```
 
-```{r chs aucs of models, echo=TRUE}
+```{r chs aucs of models diabetes, echo=TRUE}
 auc1_chs <- data.frame(auc = ci.auc(chs_pred$diabete_change_di, chs_pred$pred_grf)[2], ci_low = ci.auc(chs_pred$diabete_change_di, chs_pred$pred_grf)[1], ci_high = ci.auc(chs_pred$diabete_change_di, chs_pred$pred_grf)[3], model = "GRF", cohort = "CHS (validation)", note = "General Risk Factor")
 
 auc2_chs <- data.frame(auc = ci.auc(chs_pred$diabete_change_di, chs_pred$pred_grf_srf)[2], ci_low = ci.auc(chs_pred$diabete_change_di, chs_pred$pred_grf_srf)[1], ci_high = ci.auc(chs_pred$diabete_change_di, chs_pred$pred_grf_srf)[3], model = "GRF + SRF", cohort = "CHS (validation)", note = "General Risk Factor + Specific Risk Factor")
@@ -1033,7 +1033,7 @@ chs_pred_ifg <- chs_data_model_ifg %>%
 ```
 
 ## AUC of all models - IFG
-```{r solar aucs of models, echo=TRUE}
+```{r solar aucs of models ifg, echo=TRUE}
 auc1_solar <- data.frame(auc = ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf)[2], ci_low = ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf)[1], ci_high = ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf)[3], model = "GRF", cohort = "SOLAR (discovery)", note = "General Risk Factor")
 
 auc2_solar <- data.frame(auc = ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf_srf)[2], ci_low = ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf_srf)[1], ci_high = ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf_srf)[3], model = "GRF + SRF", cohort = "SOLAR (discovery)", note = "General Risk Factor + Specific Risk Factor")
@@ -1053,7 +1053,7 @@ auc_solar_ifg <- auc1_solar %>%
   mutate(outcome_type = "IFG")
 ```
 
-```{r chs aucs of models, echo=TRUE}
+```{r chs aucs of models ifg, echo=TRUE}
 auc1_chs <- data.frame(auc = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf)[2], ci_low = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf)[1], ci_high = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf)[3], model = "GRF", cohort = "CHS (validation)", note = "General Risk Factor")
 
 auc2_chs <- data.frame(auc = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf_srf)[2], ci_low = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf_srf)[1], ci_high = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf_srf)[3], model = "GRF + SRF", cohort = "CHS (validation)", note = "General Risk Factor + Specific Risk Factor")
@@ -1712,7 +1712,7 @@ table(chs_data_model_a1c$diabete_change_di)
 ```
 
 ## AUC of all models - a1c
-```{r solar aucs of models, echo=TRUE}
+```{r solar aucs of models a1c, echo=TRUE}
 auc1_solar <- data.frame(auc = ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf)[2], ci_low = ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf)[1], ci_high = ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf)[3], model = "GRF", cohort = "SOLAR (discovery)", note = "General Risk Factor")
 
 auc2_solar <- data.frame(auc = ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf_srf)[2], ci_low = ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf_srf)[1], ci_high = ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf_srf)[3], model = "GRF + SRF", cohort = "SOLAR (discovery)", note = "General Risk Factor + Specific Risk Factor")
@@ -1732,7 +1732,7 @@ auc_solar_a1c <- auc1_solar %>%
   mutate(outcome_type = "a1c")
 ```
 
-```{r chs aucs of models, echo=TRUE}
+```{r chs aucs of models a1c, echo=TRUE}
 # auc1_chs <- data.frame(auc = ci.auc(chs_pred_a1c$diabete_change_di, chs_pred_a1c$pred_grf)[2], ci_low = ci.auc(chs_pred_a1c$diabete_change_di, chs_pred_a1c$pred_grf)[1], ci_high = ci.auc(chs_pred_a1c$diabete_change_di, chs_pred_a1c$pred_grf)[3], model = "GRF", cohort = "CHS (validation)", note = "General Risk Factor")
 # 
 # auc2_chs <- data.frame(auc = ci.auc(chs_pred_a1c$diabete_change_di, chs_pred_a1c$pred_grf_srf)[2], ci_low = ci.auc(chs_pred_a1c$diabete_change_di, chs_pred_a1c$pred_grf_srf)[1], ci_high = ci.auc(chs_pred_a1c$diabete_change_di, chs_pred_a1c$pred_grf_srf)[3], model = "GRF + SRF", cohort = "CHS (validation)", note = "General Risk Factor + Specific Risk Factor")

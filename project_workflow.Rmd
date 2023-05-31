@@ -28,54 +28,54 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 # 3. MWAS Analysis
-```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_1 MWAS Analysis.Rmd")}
+```{r child =fs::path(here::here(),"2_mwas_and_pathway_analysis","1_1 MWAS Analysis.Rmd")}
 
 ```
 
 # 4. Mummichog pathway analysis
-```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_2 Mummichog Pathway Analysis.Rmd")}
+```{r child =fs::path(here::here(),"2_mwas_and_pathway_analysis","1_2 Mummichog Pathway Analysis.Rmd")}
 
 ```
 
 
 # 5. Mummichog result organization
-```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_3 Mummichog Result.Rmd")}
+```{r child =fs::path(here::here(),"2_mwas_and_pathway_analysis","1_3 Mummichog Result.Rmd")}
 
 ```
 
 
-# 6. Annotation of metabolites
-```{r child =fs::path(here::here(),"2_mwas and mummichog analysis","1_4 Create Final Annotated Metabolites.Rmd")}
+# 6. Feature selection
+```{r child =fs::path(here::here(),"3_feature_selection","3_Feature selection.Rmd")}
 
 ```
 
-# 7. Feature selectiong
-```{r child =fs::path(here::here(),"3_feature_selection","3_ Feature selection.Rmd")}
+
+# 7. Model comparisons
+```{r  child =fs::path(here::here(),"4_prediction_models","4_1_Model comparisons.Rmd")}
 
 ```
 
 
 # 8. Prediction models
-```{r  child =fs::path(here::here(),"4_prediction models","4_ Models Comparison.Rmd")}
+```{r  child =fs::path(here::here(),"4_prediction_models","4_2_Prediction.Rmd")}
 
 ```
 
-
 # 9. Prepare Result Figure
 ## 1) ROC curves
-```{r  child =fs::path(here::here(),"5_results_figures","Figure 1 Roc Curve.Rmd")}
+```{r  child =fs::path(here::here(),"5_results_figures","Figure 2 Roc Curve.Rmd")}
 
 ```
 
 
 ## 2) AUC comparison
-```{r  child =fs::path(here::here(),"5_results_figures","Figure 2 AUC comparison.Rmd")}
+```{r  child =fs::path(here::here(),"5_results_figures","Figure 3 AUC comparison.Rmd")}
 
 ```
 
 
 ## 3) Coefficient plot
-```{r  child =fs::path(here::here(),"5_results_figures","Figure 3 Coefficient plot.Rmd")}
+```{r  child =fs::path(here::here(),"5_results_figures","Figure 4 Coefficient plot.Rmd")}
 
 ```
 

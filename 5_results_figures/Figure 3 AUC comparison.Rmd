@@ -36,6 +36,8 @@ auc <- read_csv(fs::path(dir_results,
 ### Create auc comparision plots-----
 model_name <- c("GRF", "GRF + SRF","GRF + metabolites", "GRF + SRF + metabolites","metabolites")
 
+auc <- auc %>% mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
+
 auc %>% filter(model %in% model_name) %>%
   ggplot(aes(x = factor(model, levels = model_name), y = auc, color = cohort)) +
   geom_point(size = 1, position =position_dodge(width = 0.3)) +

@@ -48,8 +48,8 @@ auc_df %>% ggplot(aes(x = auc)) +
            y = 65) +
   theme_classic()
 
-ggsave(filename = fs::path(dir_reports, "Figure S2. empirical auc distribution of randomly selected reatures and covars.png"), 
-       width = 10, height = 6, dpi=300)
+# ggsave(filename = fs::path(dir_reports, "Figure S2. empirical auc distribution of randomly selected reatures and covars.png"), 
+#        width = 10, height = 6, dpi=300)
 
 # auc7_chs <- data.frame(auc = median(auc_df$auc), ci_low =as.numeric(jag2::qntle_fxn(auc_df$auc, 0.025)), ci_high = as.numeric(jag2::qntle_fxn(auc_df$auc, 0.975)), model = "GRF + SRF + randome metabolites", cohort = "CHS", note = "random selected features + all covars")
 

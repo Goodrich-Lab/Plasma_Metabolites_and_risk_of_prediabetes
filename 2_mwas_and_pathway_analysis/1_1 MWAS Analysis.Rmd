@@ -87,6 +87,7 @@ mwas_solar <- read_rds(fs::path(dir_results,
 
 # Load Metabolomics Feature Tables 
 ftdata <- read_rds(fs::path(dir_data,
+                            "metabolomics",
                    "sol_chs_batch_cor_scaled_untargeted_fts.rds"))
 
 # Obtain Feature metadata 
@@ -118,9 +119,6 @@ mwas_solar2 <- mwas_solar1  %>% mutate(
             percent_significant_p05 = npct(sig, 
                                            "Sig.", 
                                            n.digits = 2))) #1105
-
-# rm(mwas_solar, mwas_solar1, solar_data, 
-#     sol_df, sol_df_mwas, solar_ft, solar_summary_mwas, )
 ```
 
 
