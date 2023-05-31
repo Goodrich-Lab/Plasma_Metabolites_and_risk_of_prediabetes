@@ -11,7 +11,6 @@ output:
 ---
 
 ```{r data setup, include = FALSE, echo = FALSE}
-
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -21,12 +20,13 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 ## Data Loading 
-Two cleaned datasets were loaded in this project.
-One is Metabolomics Feature data, another is Exposure Outcome Data.
+**Two cleaned datasets were loaded in this project. One is Metabolomics Feature data, another is Exposure Outcome Data**
 
 ```{r data loading, echo = TRUE}
 # Load Metabolomics Feature Tables 
-ftdata <- read_rds(fs::path(dir_data,
+ftdata <- read_rds(
+  fs::path(dir_data,
+                            "metabolomics",
                    "sol_chs_batch_cor_scaled_untargeted_fts.rds"))
 
 # Obtain Feature metadata 
@@ -35,19 +35,25 @@ ft_metadata <- ftdata$solar %>%
   bind_rows(.id = "mode")
 
 # Load Exposure Outcome Data 
-sol <- read_rds(fs::path(dir_data,
+sol <- read_rds(fs::path(dir_data_analysis,
                          "SOLAR exposure outcome data HRE PFAS.rds"))
+
 
 chs <- read_rds(fs::path(dir_data_analysis,
                                   "CHS MetaAir MetaChem Cleaned Redcap and Exposures Outcome Data long V2.rds"))
 ```
 
 ## Data Preprocessing 
-Preprocess outcome and covariates data for solar cohort
+
+* Step1: create prediabete and diabete varaibles
+
+* Step2: create diabete_change variable which indicate how participants' diabete status(prediabete, diabete, no diabete) change from first visit to second visit.
+
+* Step3: create diabete_change_di variable which has two categories: no to no (NO), no to yes(Yes). 
+
+### Preprocess outcome and covariates data for solar cohort
 ```{r data preprocessing solar, echo = TRUE, message = FALSE}
-# Step1: create prediabete and diabete varaibles
-# Step2: create diabete_change variable which indicate how participants' diabete status(prediabete, diabete, no diabete) change from first visit to second visit.
-# Step3: create diabete_change_di variable which has two categories: no to no (NO), no to yes(Yes). 
+
 solar_df <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
   mutate(
@@ -72,6 +78,9 @@ solar_df <- sol$longitudinal %>%
     )
   ) %>%
   mutate(prediabete_or_diabete = as.factor(prediabete_or_diabete))
+
+# checking how many participants in solar and chs started without prediabetes but developed T2D 
+
 
 # pivot wider
 solar_df_w <- solar_df %>% 
@@ -272,13 +281,14 @@ solar_df_w2<- solar_df_w1 %>% mutate(
            TRUE ~ diabete_change
          ),
   diabete_change_di = factor(diabete_change_di))
+
 ```
 
-Preprocess outcome and covars data for chs cohort
+### Preprocess outcome and covars data for chs cohort
 ```{r data preprocessing chs, echo = TRUE, message = FALSE}
 chs_df <- chs %>%
   dplyr::select(id, study, og_glu_5, og_glu120, ma_age, ma_sex, ma_bmi, ma_hisp, total_chol_dori, triglycerides_dori, hba1c) %>%
-  rename(age = ma_age, 
+  dplyr::rename(age = ma_age, 
          sex = ma_sex,
          bmi = ma_bmi,
          hisp = ma_hisp,
@@ -307,7 +317,7 @@ chs_df <- chs %>%
   ) %>%
   mutate(prediabete_or_diabete = as.factor(prediabete_or_diabete),
          visit = ifelse(study == "MetaAir", 1, 2)) %>%
-  select(id, visit, age, everything())
+  dplyr::select(id, visit, age, everything())
 
 # pivot wider
 chs_df_w <- chs_df %>% 
@@ -338,7 +348,9 @@ chs_df_w1 <- chs_df_w %>%
            diabete_1 == "Yes" &
              prediabete_or_diabete_2 == "No" ~ "Diabete to no"
          ))
+
 table1::table1(~diabete_change, chs_df_w1)
+
 chs_df_w2 <- chs_df_w1 %>% 
   mutate(diabete_change_di = case_when(
            diabete_change == "No to prediabete" ~ "No to Yes",
@@ -351,13 +363,62 @@ chs_df_w2 <- chs_df_w1 %>%
 # write_rds(solar_df_w2, fs::path(dir_data_analysis, "SOLAR exposure outcome data HRE PFAS wide.rds"))
 ```
 
-Analysis ready feature data
+### Prepare Analysis ready feature data
+**Metabolite feature intensities were log2 transformed, and extreme values (more than seven standard deviations away from the mean) were replaced by the mean feature intensity** 
+
 ```{r feature data, echo = TRUE, message = FALSE}
 # Preparing analysis ready feature data------
 # combine four different mode.
 ## solar------
-feature_solar <- reduce(ftdata$sol, left_join) %>%
-  mutate(id = as.character(id))
+ftdata$solar <- ftdata$solar %>% 
+  modify(~column_to_rownames(., "id") %>% 
+           t() %>% data.frame() %>% 
+           rownames_to_column("feature") %>%
+           mutate(mz = str_split_fixed(feature, "_", 2)[,1],
+                  time = str_split_fixed(feature, "_", 2)[,2]) %>%
+           mutate(mz = round(as.numeric(mz), 5),
+                  time = round(as.numeric(time), 1)) %>%
+           mutate(feature = str_c(mz, time, sep = "_")) %>%
+           dplyr::select(feature, everything(),-mz, -time) %>%
+           column_to_rownames("feature") %>% t() %>%
+           data.frame() %>%
+           rownames_to_column("id")
+           # dplyr::select(feature, mz, time, everything()) %>%
+           # tidylog::inner_join(annotation_meta, by = c("mz", "time"))%>%
+           # dplyr::select(Name, everything(),-feature, -mz, -time) %>%
+           # column_to_rownames("Name") %>% t() %>% data.frame() %>%
+           # rownames_to_column("keyvisit") %>%
+           # mutate(key = str_split_fixed(keyvisit, "_", 2)[,1],
+           #        visit = str_split_fixed(keyvisit, "_", 2)[,2]) %>%
+           # mutate(key = str_replace(key, "X", "")) %>%
+           # dplyr::select(key,visit, everything(), -keyvisit)
+         )
+
+
+
+ftdata$chs <- ftdata$chs %>% 
+  modify(~column_to_rownames(., "id") %>% 
+           t() %>% data.frame() %>% 
+           rownames_to_column("feature") %>%
+           mutate(mz = str_split_fixed(feature, "_", 2)[,1],
+                  time = str_split_fixed(feature, "_", 2)[,2]) %>%
+           mutate(mz = round(as.numeric(mz), 5),
+                  time = round(as.numeric(time), 1)) %>%
+           mutate(feature = str_c(mz, time, sep = "_")) %>%
+           dplyr::select(feature, everything(),-mz, -time) %>%
+           column_to_rownames("feature") %>% t() %>%
+           data.frame() %>% 
+           rownames_to_column("id"))
+           # dplyr::select(feature, mz, time, everything()) %>%
+           # tidylog::inner_join(annotation_meta, by = c("mz", "time"))%>%
+           # dplyr::select(Name, everything(),-feature, -mz, -time) %>%
+           # column_to_rownames("Name") %>% t() %>% data.frame() %>%
+           # rownames_to_column("keyvisit") %>%
+           # mutate(key = str_split_fixed(keyvisit, "_", 2)[,1],
+           #        visit = str_split_fixed(keyvisit, "_", 2)[,2]) %>%
+           # mutate(key = str_replace(key, "X", "")) %>%
+           # dplyr::select(key,visit, everything(), -keyvisit)
+
 
 ## checking the number of features been imputed
 # feature_solar1<- feature_solar %>%
@@ -376,6 +437,9 @@ feature_solar <- reduce(ftdata$sol, left_join) %>%
 #   filter(num_of_imputation >0) 
 #note: number of features been imputed is 5815. 
 
+feature_solar <- reduce(ftdata$solar, left_join) %>%
+  mutate(id = as.character(id))%>%
+  rename_with(~str_remove(., "X"))
 
 feature_solar_imputed <- feature_solar %>%
   mutate_at(.vars = vars(colnames(feature_solar)[-1]),
@@ -384,7 +448,8 @@ feature_solar_imputed <- feature_solar %>%
 
 ## chs-------
 feature_chs <- reduce(ftdata$chs, left_join) %>%
-  mutate(id = as.character(id))
+  mutate(id = as.character(id))%>%
+  rename_with(~str_remove(., "X"))
 
 ## checking the number of features been imputed
 # feature_chs1<- feature_chs %>%
@@ -404,33 +469,42 @@ feature_chs <- reduce(ftdata$chs, left_join) %>%
 
 feature_chs_imputed <- feature_chs %>%
   mutate_at(.vars = vars(colnames(feature_chs)[-1]),
-            .funs = ~ifelse(abs(.) > abs(mean(.))+ 7*sd(.), mean(.), .))
+            .funs = ~ifelse(abs(.) > abs(mean(.))+ 7*sd(.), mean(.), .)) %>%
+  mutate(id = sub("X", "", id))
 
 # Saving analysis ready feature data------
-# write_rds(feature_solar_imputed, fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+# write_rds(feature_solar_imputed, fs::path(dir_data_analysis, "SOLAR feature data all modes_0421.rds"))
 # 
-# write_rds(feature_chs_imputed, fs::path(dir_data_analysis, "CHS feature data all modes.rds"))
+# write_rds(feature_chs_imputed, fs::path(dir_data_analysis, "CHS feature data all modes_0421.rds"))
 
-rm(solar_df, solar_df_w, solar_df_w1, 
-   sol, chs, chs_df, chs_df_w,
-   chs_df_w1, feature_chs,
-   # feature_solar, 
-   ftdata, missing_solar_df_w, missing_solar_df_w2,
-   missing_solar_df_w3, missing_solar_df_w4, missing_solar_df_w5,
-   missing_solar_df_w6)
+# rm(solar_df, solar_df_w, solar_df_w1, 
+#    sol, chs, chs_df, chs_df_w,
+#    chs_df_w1, feature_chs,
+#    # feature_solar, 
+#    ftdata, missing_solar_df_w, missing_solar_df_w2,
+#    missing_solar_df_w3, missing_solar_df_w4, missing_solar_df_w5,
+#    missing_solar_df_w6)
 ```
 
-## Merge exposure outcome data with feature data
+## Merge exposure-outcome data with metabolomics feature data
 ```{r merge data, echo=TRUE, message=FALSE}
 sol_df <- solar_df_w2 %>% tidylog::left_join(feature_solar_imputed, by = "id")
 chs_df <- chs_df_w2 %>% tidylog::left_join(feature_chs_imputed, by = "id")
+
+# write_rds(sol_df, fs::path(dir_data_analysis, "SOLAR analysis full data_0421.rds"))
+# 
+# write_rds(chs_df, fs::path(dir_data_analysis, "CHS analysis full data_0421.rds"))
 ```
 
+## Prepare analysis ready completed data
+**1. Exclude participants who meets at least one of the following criteria** 
+**1) no biobanked fasting plasma**
+**2) no follow-up visit**
+**3) prediabetes at baseline**
+**4) missing total cholesterol and triglyceride**
 
-## Prepare analysis ready data
-Exclude participants with no biobanked fasting plasma, no follow-up visit, prediabetes at baseline and missing total cholesterol and triglyceride
+![Study population Flow Chart](/Users/hongxuwa/Dropbox (USC Lab)/Chatzi Projects (Active)/Env Chem SOL-CHS/Analysis/2_ongoing/SOL CHS Metabolomics Diabetes (Hongxu)/3_Reports/1 - Figure 1.png)
 
-All continuous features and covariates variables are normalized.
 ```{r prepare analysis ready data, echo=TRUE}
 # solar -------
 solar_data <-  sol_df %>% 
@@ -461,8 +535,58 @@ chs_data <- chs_df %>%
 print(paste("CHS sample size is", dim(chs_data)[1]))
 
 # write_rds(solar_data, fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
-# 
+
 # write_rds(chs_data, fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+```
+
+
+## Checking conversion rate of prediabetes/T2D
+```{r checking conversion rate}
+id_name <- c("rO2_sol_00068", 
+             "r01_sol_00029", 
+             "r02_sol_00093",
+             "r02_sol_00086",
+             "r02_sol_00116",
+             "r03_sol_00220"
+             )
+
+solar_df_w2 <- solar_df_w1 %>% filter(prediabete_1 != "Yes" & diabete_1 !="Yes") %>% filter(id %in% solar_data$id) %>%
+  select(id, contains("prediabete"), contains("diabete"))%>%
+  mutate(diabete_2 = ifelse(id %in% id_name, "Yes", "No")) %>% 
+  mutate(followup_prediabetes = case_when(
+    prediabete_2 == "Yes" ~ "Yes",
+    is.na(prediabete_2) & prediabete_3 == "Yes" ~ "Yes", 
+    is.na(prediabete_2) & is.na(prediabete_3) & prediabete_4 == "Yes" ~ "Yes",
+    is.na(prediabete_2) & is.na(prediabete_3)&is.na(prediabete_4) & prediabete_5 == "Yes" ~ "Yes",
+    is.na(prediabete_2) & is.na(prediabete_3)&is.na(prediabete_4) &is.na(prediabete_5) & prediabete_6 == "Yes" ~ "Yes",
+    is.na(prediabete_2) & is.na(prediabete_3)&is.na(prediabete_4) &is.na(prediabete_5) &is.na(prediabete_6) & prediabete_7 == "Yes" ~ "Yes",
+    TRUE ~ "No"
+         )) %>%
+  mutate(followup_diabetes = case_when(
+    diabete_2 == "Yes" ~ "Yes",
+    is.na(diabete_2) & diabete_3 == "Yes" ~ "Yes", 
+    is.na(diabete_2) & is.na(diabete_3) & diabete_4 == "Yes" ~ "Yes",
+    is.na(diabete_2) & is.na(diabete_3)&is.na(diabete_4) & diabete_5 == "Yes" ~ "Yes",
+    is.na(diabete_2) & is.na(diabete_3)&is.na(diabete_4) &is.na(diabete_5) & diabete_6 == "Yes" ~ "Yes",
+    is.na(diabete_2) & is.na(diabete_3)&is.na(diabete_4) &is.na(diabete_5) &is.na(diabete_6) & diabete_7 == "Yes" ~ "Yes",
+    TRUE ~ "No"
+         )) %>%
+    mutate(any_diabetes = case_when(
+    (diabete_2 == "Yes")| (diabete_3 == "Yes")| (diabete_4 == "Yes")| diabete_5 == "Yes" |diabete_6 == "Yes"| diabete_7 == "Yes"| diabete_8 == "Yes"| diabete_9 == "Yes" |diabete_10 == "Yes"|diabete_11 == "Yes"| diabete_12 == "Yes"~ "Yes",
+    TRUE ~ "No"
+         )) %>%
+  mutate(any_prediabetes = case_when(
+    prediabete_2 == "Yes"| prediabete_3 == "Yes"| prediabete_4 == "Yes"| prediabete_5 == "Yes" |prediabete_6 == "Yes"| prediabete_7 == "Yes"| prediabete_8 == "Yes"| prediabete_9 == "Yes" |prediabete_10 == "Yes"| prediabete_11 == "Yes"| prediabete_12 == "Yes"~ "Yes",
+    TRUE ~ "No"
+         )) %>%
+  mutate(followup = case_when(followup_diabetes == "Yes" ~ "Diabetes",
+                              followup_prediabetes == "Yes" ~ "Prediabtes",
+                              TRUE ~ "No"),
+         any = case_when(any_diabetes == "Yes" ~ "Diabetes",
+                              any_prediabetes == "Yes" ~ "Prediabtes",
+                              TRUE ~ "No"))
+  
+table1::table1(~ followup + any, data=solar_df_w2)
 ```
 
 

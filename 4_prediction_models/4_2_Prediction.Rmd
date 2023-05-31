@@ -20,7 +20,7 @@ pre {
 ```
 
 
-```{r data setup, include = FALSE, echo = FALSE}
+```{r prediction data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -51,14 +51,6 @@ sol <- read_rds(fs::path(dir_data_analysis,
 chs <- read_rds(fs::path(dir_data_analysis,
                                   "CHS MetaAir MetaChem Cleaned Redcap and Exposures Outcome Data long V2.rds"))
 
-options(knitr.table.format = "html")
-knitr::opts_chunk$set(echo = TRUE, message = FALSE)
-```
-
-## Data Loading 
-**Two cleaned datasets were loaded in this project. One is Metabolomics Feature data, another is Exposure Outcome Data**
-
-```{r data loading, echo = TRUE}
 # Load Metabolomics Feature Tables 
 ftdata <- read_rds(fs::path(dir_data,
                             "metabolomics",
@@ -76,11 +68,14 @@ sol <- read_rds(fs::path(dir_data_analysis,
 
 chs <- read_rds(fs::path(dir_data_analysis,
                                   "CHS MetaAir MetaChem Cleaned Redcap and Exposures Outcome Data long V2.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 
 ## Prepared analysis data - Prediabetes/T2D
-```{r solar prepare analysis data original outcome, echo = TRUE, message = FALSE}
+```{r solar prepare analysis data prediabetes, echo = TRUE, message = FALSE}
 solar_df <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
   mutate(
@@ -183,7 +178,7 @@ table(solar_df_finalvisit$status) #114
 #        2         78          34 
 ```
 
-```{r chs prepare analysis data original outcome}
+```{r chs prepare analysis data prediabetes}
 chs_df <- chs %>%
   dplyr::select(id, study, og_glu_5, og_glu120, ma_age, ma_sex, ma_bmi, ma_hisp, total_chol_dori, triglycerides_dori, hba1c) %>%
   dplyr::rename(age = ma_age, 
@@ -266,7 +261,7 @@ table(chs_df_finalvisit$status)
 ```
 
 ## Prepared analysis data - impaired fasting glucose
-```{r solar prepare analysis data ifg}
+```{r solar prepare analysis data ifg prediction}
 solar_df_ifg <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
   mutate(
@@ -348,7 +343,7 @@ mean(solar_df_finalvisit_ifg$age) # 16.26484
 sd(solar_df_finalvisit_ifg$age) # 2.26256
 ```
 
-```{r chs prepare analysis data ifg}
+```{r chs prepare analysis data ifg prediction}
 chs_df_ifg <- chs %>%
   dplyr::select(id, study, og_glu_5, og_glu120, ma_age, ma_sex, ma_bmi, ma_hisp, total_chol_dori, triglycerides_dori, hba1c) %>%
   dplyr::rename(age = ma_age, 
@@ -420,7 +415,7 @@ table(chs_df_finalvisit_ifg$status)
 ```
 
 ## Prepared analysis data - IGT
-```{r solar prepared analysis data igt}
+```{r solar prepared analysis data igt prediction}
 solar_df_igt <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
   mutate(
@@ -500,7 +495,7 @@ sd(solar_df_finalvisit_igt$age) # 2.264919
 ```
 
 
-```{r chs prepare analysis data igt}
+```{r chs prepare analysis data igt prediction}
 chs_df_igt <- chs %>%
   dplyr::select(id, study, og_glu_5, og_glu120, ma_age, ma_sex, ma_bmi, ma_hisp, total_chol_dori, triglycerides_dori, hba1c) %>%
   dplyr::rename(age = ma_age, 
@@ -847,7 +842,7 @@ chs_pred_ifg <- chs_data_model_ifg %>%
 ```
 
 ## AUC comparisons pvalue - IFG
-```{r pvalue auc comparison IFG}
+```{r pvalue auc comparison IFG prediction}
 # model comparison
 pvalue_df_ifg <- data.frame(p_value = c(
   
@@ -885,7 +880,7 @@ cohort = c("CHS", "CHS"
 ```
 
 ## AUC of all models - ifg
-```{r chs aucs of models ifg, echo=TRUE}
+```{r chs aucs of models ifg prediction, echo=TRUE}
 auc1_chs <- data.frame(auc = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf)[2], ci_low = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf)[1], ci_high = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf)[3], model = "GRF", cohort = "CHS (validation)", note = "General Risk Factor")
 
 auc2_chs <- data.frame(auc = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf_srf)[2], ci_low = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf_srf)[1], ci_high = ci.auc(chs_pred_ifg$diabete_change_di, chs_pred_ifg$pred_grf_srf)[3], model = "GRF + SRF", cohort = "CHS (validation)", note = "General Risk Factor + Specific Risk Factor")
@@ -1018,7 +1013,7 @@ chs_pred_igt <- chs_data_model_igt %>%
 
 
 ## AUC comparisons pvalue -IGT 
-```{r pvalue auc comparison igt}
+```{r pvalue auc comparison igt prediction}
 # model comparison
 pvalue_df_igt <- data.frame(p_value = c(
   
@@ -1050,7 +1045,7 @@ cohort = c("CHS", "CHS", "CHS","CHS", "CHS","CHS"))
 
 
 ## AUC of models IGT
-```{r chs aucs of models IGT, echo=TRUE}
+```{r chs aucs of models IGT prediction, echo=TRUE}
 auc1_chs <- data.frame(auc = ci.auc(chs_pred_igt$diabete_change_di, chs_pred_igt$pred_grf)[2], ci_low = ci.auc(chs_pred_igt$diabete_change_di, chs_pred_igt$pred_grf)[1], ci_high = ci.auc(chs_pred_igt$diabete_change_di, chs_pred_igt$pred_grf)[3], model = "GRF", cohort = "CHS (validation)", note = "General Risk Factor")
 
 auc2_chs <- data.frame(auc = ci.auc(chs_pred_igt$diabete_change_di, chs_pred_igt$pred_grf_srf)[2], ci_low = ci.auc(chs_pred_igt$diabete_change_di, chs_pred_igt$pred_grf_srf)[1], ci_high = ci.auc(chs_pred_igt$diabete_change_di, chs_pred_igt$pred_grf_srf)[3], model = "GRF + SRF", cohort = "CHS (validation)", note = "General Risk Factor + Specific Risk Factor")
