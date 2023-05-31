@@ -1,16 +1,12 @@
 
-
 # data folder
-dir_data <- fs::path("~",
-                     "Desktop",
-                     "progress",
-                     "Data",
-                     "0_Data_mirror_do_not_edit")
-
 dir_home<- fs::path(here::here() %>% 
-                          dirname())
+                      dirname())
+dir_analysis <- dir_home |> dirname() |> dirname()
 
-# analysis ready data folder
+dir_data <- fs::path(dir_analysis,
+                     "1_analysis_ready_data")
+
 dir_data_analysis <- fs::path(
   here::here() %>% 
   dirname(), "0_Data", "analysis ready data")
