@@ -19,6 +19,7 @@ library(crayon)
 library(stabs)
 library(haven)
 library(car)
+library(irr)
 
 # no_cores <- detectCores() -1
 # cl <- makeCluster(no_cores, type = "FORK")

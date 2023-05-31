@@ -19,7 +19,7 @@ pre {
 
 
 ## Load data
-```{r feature selection data setup, include = FALSE, echo = FALSE}
+```{r feature selection setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
 source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
@@ -35,13 +35,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Feature reduction: select annotated features from mummichog
 ```{r annotated features, echo=TRUE}
-
 # Get empirical compound to Pathway key from metaboanalyst----
 mum_pw <- read_csv(fs::path(dir_results, 
                             "diabete_change_di",
                             "solar",
                             "mummichog_pathway_enrichment.csv")) %>%
-  janitor::clean_names() %>% rename(pathway = x1)
+  janitor::clean_names() %>% dplyr::rename(pathway = x1)
 
 # Read in mz/rt key ------------------------------------------
 mum_ec <- read_csv(fs::path(dir_results, 
@@ -51,8 +50,8 @@ mum_ec <- read_csv(fs::path(dir_results,
   janitor::clean_names() %>%
   mutate(name = str_c(query_mass, retention_time, sep = "_")) 
 
-# Key for superpathways
-superpathwaykey <- readxl::read_xlsx(fs::path(dir_data, 
+# Key for superpathways----
+superpathwaykey <- readxl::read_xlsx(fs::path(dir_data_analysis %>% dirname(),
                                               "Supporting files",  
                                               "superpathway_key_sept_21.xlsx")) %>% 
   dplyr::rename(path = pathway)
@@ -61,7 +60,7 @@ superpathwaykey <- readxl::read_xlsx(fs::path(dir_data,
 
 pw_ec_df <- str_split(mum_pw$ec_hits, ";") %>% 
   enframe() %>% 
-  rename(empirical_compound = value)
+  dplyr::rename(empirical_compound = value)
 
 # Bind pw_ec_df with full data
 pw_ec_key <- bind_cols(mum_pw, pw_ec_df)
@@ -81,9 +80,8 @@ ecd_pw_key <- tidylog::full_join(pw_ec_key2,
 features <- unique(ecd_pw_key$name) #595
 ```
 
-## Preparing analysis ready solar and chs data
-All continuous features and covariates variables are normalized.
-```{r prepare analysis ready data, echo=TRUE}
+## Data preparation: normalization
+```{r analysis ready data, echo=TRUE}
 # solar -------
 solar_data <- solar_data %>%
   mutate_at(.vars = vars(all_of(features),age_1, bmi_1, og_glu_5_1, og_glu120_1, tot_chol_1, tag_1 ),
@@ -91,87 +89,93 @@ solar_data <- solar_data %>%
             )
 ```
 
-## Checking feature selection stability 
-```{r}
+## Stablility selection procesure
+**Randomly subsampling and repeating the LASSO regression 5,000 times**
+
+```{r checking feature selection stability,echo=TRUE }
 solar_data_model <- solar_data %>% 
     select(diabete_change_di, 
            all_of(features), 
            all_of(covars1[-4]),
            all_of(covars2))  
   
-# foreach(i = 1:5000) %dopar% {
-#   # solar ----------------
-#   print(i)
-#   # Getting strata training and test data.  
-#   split <- initial_split(solar_data_model, prob = 0.7, 
-#                          strata ="diabete_change_di")
-#   
-#   train <- training(split) %>% mutate(id = "train")
-# 
-#   y_train <- train %>% dplyr::select(all_of(outcomes)) %>% 
-#     as.matrix()
-#   
-#   x_train <- train %>% 
-#     dplyr::select(all_of(features),
-#                   all_of(covars1[-4]),
-#                   all_of(covars2)
-#                   ) %>% 
-#     fastDummies::dummy_cols(remove_selected_columns = TRUE,
-#                           remove_first_dummy = TRUE) %>%
-#     as.matrix()
-#   
-#   ctrl <- trainControl(
-#     method = "cv",
-#     number  = 10,
-#     classProbs = TRUE,
-#     summaryFunction = twoClassSummary
-#   )
-# 
-#   fit <- train(
-#     x = x_train,
-#     y = y_train,
-#     method = "glmnet",
-#     trControl = ctrl,
-#     metric = "ROC",
-#     tuneGrid = expand.grid(alpha = 1, lambda = seq(0.001, 0.1, by = 0.001)),
-#     penalty.factor = c(rep(1,length(features)), rep(0, 7))
-#   )
-#   
-#   result <- as.data.frame(as.matrix(coef(fit$finalModel, fit$bestTune$lambda))) %>% 
-#     rownames_to_column() %>%
-#     rename(coef = s1,
-#            feature = rowname) %>%
-#     mutate(outcome = "diabete_change_di")
-#   
-#   result_selected_feature <- result %>% filter(coef != 0) 
-#   
-  # write_csv(result_selected_feature,
-  #           fs::path(dir_results,
-  #                  "prediction",
-  #                  "4_feature_selection_diabete_5000_1122.csv"),
-  #           append = TRUE)
-# }
+foreach(i = 1:5000) %dopar% {
+  # solar ----------------
+  print(i)
+  # Getting strata training and test data.
+  split <- initial_split(solar_data_model, prob = 0.7,
+                         strata ="diabete_change_di")
+
+  train <- training(split) %>% mutate(id = "train")
+
+  y_train <- train %>% dplyr::select(all_of(outcomes)) %>%
+    as.matrix()
+
+  x_train <- train %>%
+    dplyr::select(all_of(features),
+                  all_of(covars1[-4]),
+                  all_of(covars2)
+                  ) %>%
+    fastDummies::dummy_cols(remove_selected_columns = TRUE,
+                          remove_first_dummy = TRUE) %>%
+    as.matrix()
+
+  ctrl <- trainControl(
+    method = "cv",
+    number  = 10,
+    classProbs = TRUE,
+    summaryFunction = twoClassSummary
+  )
+
+  fit <- train(
+    x = x_train,
+    y = y_train,
+    method = "glmnet",
+    trControl = ctrl,
+    metric = "ROC",
+    tuneGrid = expand.grid(alpha = 1, lambda = seq(0.001, 0.1, by = 0.001)),
+    penalty.factor = c(rep(1,length(features)), rep(0, 7))
+  )
+
+  result <- as.data.frame(as.matrix(coef(fit$finalModel, fit$bestTune$lambda))) %>%
+    rownames_to_column() %>%
+    rename(coef = s1,
+           feature = rowname) %>%
+    mutate(outcome = "diabete_change_di")
+
+  result_selected_feature <- result %>% filter(coef != 0)
+
+write_csv(result_selected_feature,
+          fs::path(dir_results,
+                 "prediction",
+                 "4_feature_selection_diabete_5000_1122.csv"),
+          append = TRUE)
+}
 ```
 
-## Select features
-```{r}
+## Selected features
+**Features selected in at least 85% of the 5,000 iterations were included in the prediction models**
+```{r selecting features, echo=TRUE}
 ## Load selected feature file
 feature <- read_csv(
             fs::path(dir_results, 
                    "prediction",
                    "4_feature_selection_diabete_5000_1122.csv")
 ,col_names = FALSE) %>%
-    rename(feature = X1,
+    dplyr::rename(feature = X1,
            coefficient = X2,
            outcome = X3)
 
 ## Selected features that appear at least 4250 times of the replications
 feature_n <- feature %>% 
   group_by(feature) %>% 
-  summarize(count =n()) %>%
+  dplyr::summarize(count =n()) %>%
   arrange(desc(count)) %>%
   mutate(percentage = count/5000)
 
+write_csv(feature_n,fs::path(dir_results, 
+                   "prediction",
+                   "4_feature_selection_percentage.csv"))
 # feature_n %>% filter(!feature %in% c(covars1, covars2, "sex_1_Male") & feature != "(Intercept)"& percentage > 0.25) %>% ggplot(aes(x=percentage)) + 
 #   geom_vline(aes(xintercept = 0.85), color = "blue", linetype = "dashed")+
 #   # geom_vline(aes(xintercept = 0.9), color = "blue", linetype = "dashed")+
@@ -188,78 +192,5 @@ feature_80 <- feature_n %>% filter(count > 0.85*5000)
 selected_feature_name <- feature_80$feature[-c(1:8)] # 3
 ```
 
-## Annotation of the features
-```{r annotation, echo=TRUE}
-mzrt_key <- read_rds(fs::path(dir_results,                          "1_4 mummichog_pw_ec_feature_key_with_cpd_names.rds"))
 
-mzrt_key_sub <- mzrt_key %>% filter(name %in% selected_feature_name) %>% 
-  mutate(met_name_first = str_split_fixed(met_name, ";", n = 2)[,1],
-         pathway_first = str_split_fixed(path_2, ";", n=2)[,1]) %>%
-  select(empirical_compound, met_name, met_name_first, pathway_first, everything())
-```
-
-# Correlation of the features and covars
-```{r}
-chs_cor <- chs_data %>%
-  mutate(sex_1 = ifelse(sex_1 == "Female", 1, 2)) %>%
-  select(all_of(covars1[-4]),
-         all_of(covars2),
-                            all_of(selected_feature_name)) %>%
-  rename( 
-          # `Riboflavin`= `395.1557835_20.84169214`,
-          `Hippuric acid` = `214.026117480542_35.1421775112176`,
-          # `Gamma Hydroxybutyric Acid` = `85.0295266786533_136.974861632338`,
-          `Taurocholic acid`= `515.287209133297_215.197333996352`,
-          # `CE5708`= `425.25200021332_66.5015707990317`,
-          # `4-Hydroperoxy-2-nonenal` = `171.1026058_35.24416628`,
-          # `Homovanillic acid` = `262.9754638_22.10657919`,
-          # `L-Threonine` = `100.040536693444_202.570926684761`,
-          # `3-Methoxytyramine` = `132.0807086_170.2447445`,
-          `Caprylic acid` = `125.097384256509_58.1004384860803`
-          # `Adenine` = `134.047313078051_18.667900745273`,
-          # `Hypotaurine` = `110.027055434909_266.167833117555` 
-          )
-
-solar_cor <- solar_data %>%
-  mutate(sex_1 = ifelse(sex_1 == "Female", 1, 2)) %>%
-  select(all_of(covars1[-4]),
-         all_of(covars2),
-                            all_of(selected_feature_name)) %>%
-  rename( 
-          # `Riboflavin`= `395.1557835_20.84169214`,
-          `Hippuric acid` = `214.026117480542_35.1421775112176`,
-          # `Gamma Hydroxybutyric Acid` = `85.0295266786533_136.974861632338`,
-          `Taurocholic acid`= `515.287209133297_215.197333996352`,
-          # `CE5708`= `425.25200021332_66.5015707990317`,
-          # `4-Hydroperoxy-2-nonenal` = `171.1026058_35.24416628`,
-          # `Homovanillic acid` = `262.9754638_22.10657919`,
-          # `L-Threonine` = `100.040536693444_202.570926684761`,
-          # `3-Methoxytyramine` = `132.0807086_170.2447445`,
-          `Caprylic acid` = `125.097384256509_58.1004384860803`
-          # `Adenine` = `134.047313078051_18.667900745273`,
-          # `Hypotaurine` = `110.027055434909_266.167833117555` 
-          )
-  
-corr_chs <- cor(chs_cor)
-corr_solar <- cor(solar_cor)
-png(fs::path(dir_reports, "Figure S1 correlation_plot_covars_features_chs.png"),
-    width = 2000, height = 2000, res = 350)
-corrplot(corr_chs, type="lower",
-         col=brewer.pal(n=8, name="Blues"),
-         title = "",
-         method = "color",
-         addCoef.col = "black",
-         tl.cex=0.5, number.cex=0.5)
-dev.off()
-
-png(fs::path(dir_reports, "Figure S1 correlation_plot_covars_features_solar.png"),
-    width = 2000, height = 2000, res = 350)
-corrplot(corr_solar, type="lower",
-         col=brewer.pal(n=8, name="Blues"),
-         title = "",
-         method = "color",
-         addCoef.col = "black",
-         tl.cex=0.5, number.cex=0.5)
-dev.off()
-```
 

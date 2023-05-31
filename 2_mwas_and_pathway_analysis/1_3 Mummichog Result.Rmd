@@ -1,5 +1,5 @@
 ---
-title: "Mummichog result figure"
+title: "Mummichog result"
 author: "Hongxu Wang"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
@@ -17,6 +17,7 @@ pre {
 }
 ```
 
+
 ```{r mummichog result setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
@@ -26,49 +27,44 @@ options(knitr.table.format = "html")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Combine Mummichog analysis results 
-```{r Mummichog p value, include = FALSE, echo = FALSE}
+### Combine Mummichog analysis results 
+```{r Mummichog p value, echo = FALSE, include=TRUE}
 # Key for superpathways
-superpathwaykey <- readxl::read_xlsx(fs::path(dir_data_analysis %>%
-                                                dirname(),
+superpathwaykey <- readxl::read_xlsx(fs::path(dir_data_analysis %>%                                                dirname(),
                                               "Supporting files",                                                "superpathway_key_sept_21.xlsx")) %>%
   dplyr::rename(path = pathway)
 
-# Individual exposures: Get list of all results folders ------------------------
+# Get list of all results folders ------------------------
 cohort <- c("solar")
 outcomes <- c("diabete_change_di")
 
 dir_results_outcomes <- fs::path(dir_results, outcomes) 
-
 
 dir_results_outcomes_chrt <- map(dir_results_outcomes,
                                        ~fs::path(.x, cohort)) %>% 
   unlist() 
 
 # 1) Load Mummichog pathway results --------------------------------------------
-# Load pathway results with combined_pvals from BOTH Mummichog AND GSEA
+## Load pathway results with combined_pvals from BOTH Mummichog AND GSEA-------
 mum_pw <- read_csv(fs::path(dir_results_outcomes_chrt, 
                             "mummichog_integ_pathway_enrichment.csv"), 
                    id = "file_name") %>% 
   janitor::clean_names() %>% 
-  rename(path = x1) %>% 
-  # mutate(file_name = str_replace_all(file_name, "/", "_") %>% 
-  #          str_remove("_mummichog_pathway_enrichment.csv"))
+  tidylog::rename(path = x1) %>% 
+
   dplyr::mutate(file_name = file_name %>% 
          str_remove("/mummichog_integ_pathway_enrichment.csv"))
 
-# Load pathway results including ec.hits results
+## Load pathway results including ec.hits results
 mum_pw_ec <- read_csv(fs::path(dir_results_outcomes_chrt, 
                                "mummichog_pathway_enrichment.csv"), 
                       id = "file_name") %>% 
   janitor::clean_names() %>% 
-  rename(path = x1) %>% 
-  # mutate(file_name = str_replace_all(file_name, "/", "_") %>% 
-  #          str_remove("_mummichog_pathway_enrichment.csv"))
+    tidylog::rename(path = x1) %>% 
   mutate(file_name = file_name %>% 
            str_remove("/mummichog_pathway_enrichment.csv"))
 
-# Add EC information to mum_pw
+# Add EC information to mum_pw(merge previous loaded two files)
 mum_pw_ec <- mum_pw %>% 
   tidylog::left_join(mum_pw_ec %>% 
                        dplyr::select(file_name, path, ec_hits),
@@ -87,27 +83,28 @@ mum_pw_ec1 <- mum_pw_ec %>%
     neg_logp = -log(combined_pvals),
     name = str_c(cohort, outcome, sep = "_") %>% 
       tolower(),
-    # outcomeog = outcome, 
-    # pfas = rename_pfas(pfas,include_asterisk = TRUE), 
     path_2  = str_replace(path, "metabolism", "met.") %>% 
       str_replace("Metabolism", "met.") %>% 
       str_replace(., " pathway", "")) %>% 
   select(outcome, cohort, name, everything(), -temp, -file_name)
 
 
+# Pivot wider
+mum_pw_ec_w <- pivot_wider(mum_pw_ec1, 
+                         id_cols = c(outcome, path, path_2), 
+                         names_from = cohort, 
+                         values_from = c(total_size:neg_logp))
+
 # Combine pathways with long data to get list to include
 mum_pw_ec_final <- tidylog::left_join(mum_pw_ec1, 
-                                   mum_pw_ec_final_w %>% 
+                                   mum_pw_ec_w %>% 
                                      select(outcome, path, path_2), 
                                    by = c("outcome", "path", "path_2")) %>% 
   tidylog::left_join(superpathwaykey)
 
-# Clean Environment
-# rm(mum_pw,mum_pw_ec, mum_pw_ec1, mum_pw_ec_w,mum_pw_ec_w1 ,wgt_chs, wgt_sol)
-
 # Save Data
-# 
-# write_rds(mum_pw_ec_final,
+
+# write_csv(mum_pw_ec_final,
 #           fs::path(dir_results,
-#                    "1_3 SOL CHS Diabete Mummichog long sig PW.RDS"))
+#                    "1_3 SOL CHS Diabete Mummichog long sig PW.csv"))
 ```

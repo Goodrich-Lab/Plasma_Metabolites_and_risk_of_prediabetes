@@ -28,42 +28,39 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ## Figure 2. AUC comparison of models 
-```{r auc comparison plot, echo=TRUE}
-# model comparison
-pvalue_df <- data.frame(p_value = c(
-  roc.test(roc(solar_pred3$diabete_change_di, solar_pred3$pred),
-           roc(solar_pred1$diabete_change_di, solar_pred1$pred))$p,
-  roc.test(roc(solar_pred4$diabete_change_di,solar_pred4$pred),
-           roc(solar_pred2$diabete_change_di, solar_pred2$pred))$p,
-  roc.test(roc(chs_pred3$diabete_change_di, chs_pred3$pred),
-           roc(chs_pred1$diabete_change_di, chs_pred1$pred))$p, 
-  roc.test(roc(chs_pred4$diabete_change_di, chs_pred4$pred),
-           roc(chs_pred2$diabete_change_di, chs_pred2$pred))$p), 
-model = c("GRF + metabolites vs GRF", "GRF + SRF + metabolites vs GRF + SRF","GRF + metabolites vs GRF", "GRF + SRF + metabolites vs GRF + SRF" ), 
-cohort = c("SOLAR", "SOLAR", "CHS", "CHS"))
 
+```{r auc comparison plot}
+auc <- read_csv(fs::path(dir_results,
+                         "prediction",
+                         "4_auc_df.csv"))
 ### Create auc comparision plots-----
-auc %>%
-  ggplot(aes(x = model,y = auc, color = cohort)) +
+model_name <- c("GRF", "GRF + SRF","GRF + metabolites", "GRF + SRF + metabolites","metabolites")
+
+auc %>% filter(model %in% model_name) %>%
+  ggplot(aes(x = factor(model, levels = model_name), y = auc, color = cohort)) +
   geom_point(size = 1, position =position_dodge(width = 0.3)) +
   geom_errorbar(aes(ymin = ci_low,
                     ymax = ci_high),
                 width = 0.2, 
                 position =position_dodge(width = 0.3)) +
   ylab("AUC (95% CI)") +
-  theme(panel.background = element_rect(fill="grey95"), 
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey") +
+  facet_wrap(~cohort) +
+  theme(panel.background = element_rect(fill="white"), 
         # panel.grid = element_blank(),
-          strip.background = element_rect(fill = "white"),
-          strip.text.y = element_text(angle = 0, hjust = 0),
-        text = element_text(size = 8),
+        strip.background = element_rect(fill = "white"),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        text = element_text(size = 18),
         axis.title.x=element_blank(),
         axis.line.x = element_line(color = "black"),
         # axis.title.y=element_blank(),
         axis.line.y = element_line(color = "black"),
         legend.title = element_blank(),
+        legend.position="none",
         axis.text.x = element_text(angle = 45, hjust=1)) +
-  scale_color_manual(values = c("#E1BE6A", "#40B0A6"))
+  scale_color_manual(values = c("#AF7AC5", "#117A65"))
 
-ggsave(filename = fs::path(dir_reports, "Figure 2. Prediction performance of models.jpg"),
-       width = 8, height = 4, dpi=300)
+ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
+       width = 8, height = 5, dpi=300)
+```
 ```

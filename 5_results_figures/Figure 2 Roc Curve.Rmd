@@ -1,0 +1,71 @@
+---
+title: "ROC curves"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{r roc curve data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+sol_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Figure 1. ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
+```{r roc curve, echo=FALSE}
+png(fs::path(dir_reports, 
+             "4_roc_curve_solar.png"),
+    width = 2000, height = 2000, res = 350)
+plot.roc(solar_pred$diabete_change_di, solar_pred$pred_grf,
+     print.auc = FALSE, col = "#AF7AC5", print.auc.y = 0.3, legacy.axes = TRUE,
+     cex.lab = 1.8,
+     cex.axis = 1.5)
+plot.roc(solar_pred$diabete_change_di, solar_pred$pred_grf_srf, 
+     print.auc = FALSE, col = "#117A65", print.auc.y = 0.4, add = TRUE)
+plot.roc(solar_pred$diabete_change_di,  solar_pred$pred_full,
+     print.auc = FALSE, col = "#E74C3C", print.auc.y = 0.5, add = TRUE)
+# legend("bottomright", 
+#        legend = c("Model 1", "Model 2", "Model 3"),
+#        col = c("#AF7AC5", "#117A65", "#E74C3C"),
+#        lty = c(1,1,1),
+#        text.font = 2)
+invisible(dev.off()) 
+
+
+png(fs::path(dir_reports, 
+             "4_roc_curve_CHS.png"),
+    width = 2000, height = 2000, res = 350)
+plot.roc(chs_pred$diabete_change_di, chs_pred$pred_grf,
+     print.auc = FALSE, col = "#AF7AC5", print.auc.y = 0.3, legacy.axes = TRUE,
+     cex.lab = 1.8,
+     cex.axis = 1.5)
+plot.roc(chs_pred$diabete_change_di, chs_pred$pred_grf_srf, 
+     print.auc = FALSE, col = "#117A65", print.auc.y = 0.4, add = TRUE)
+plot.roc(chs_pred$diabete_change_di,  chs_pred$pred_full,
+     print.auc = FALSE, col = "#E74C3C", print.auc.y = 0.5, add = TRUE)
+# legend("bottomright", 
+#        legend = c("Model 1", "Model 2", "Model 3"),
+#        col = c("#AF7AC5", "#117A65", "#E74C3C"),
+#        lty = c(1,1,1),
+#        text.font = 2)
+invisible(dev.off())
+
+```
+
+
+
