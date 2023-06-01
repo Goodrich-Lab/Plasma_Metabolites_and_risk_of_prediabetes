@@ -28,7 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Set up Dataset for mummichog
-```{r set up Dataset for mummichog, echo = TRUE}
+```{r set up Dataset for mummichog, echo = TRUE, warning = FALSE}
 # Set up folder structure------- 
 for(outcome_name in outcomes){
   # Create outcome Folder: Level 1 (outcome)

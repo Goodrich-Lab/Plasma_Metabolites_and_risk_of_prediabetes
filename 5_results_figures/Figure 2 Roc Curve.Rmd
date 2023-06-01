@@ -26,7 +26,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Figure 1. ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
+### Figure 1. ROC curve of GRF, GRF+SRF, GRF+SRF+metabolites in SOLAR and CHS
 ```{r roc curve, echo=FALSE}
 png(fs::path(dir_reports, 
              "4_roc_curve_solar.png"),
@@ -67,5 +67,5 @@ invisible(dev.off())
 
 ```
 
-
+![Roc curve comparison plot](/Users/hongxuwa/Dropbox (USC Lab)/Chatzi Projects (Active)/Env Chem SOL-CHS/Analysis/2_ongoing/SOL CHS Metabolomics Diabetes (Hongxu)/3_Reports/Figure 2. Roc curve.jpg)
 

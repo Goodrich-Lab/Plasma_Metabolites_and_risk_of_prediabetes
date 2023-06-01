@@ -10,7 +10,6 @@ output:
     code_folding: hide
 ---
 
-
 ```{r coefficient plot data setup, include = FALSE, echo = FALSE}
 source(fs::path(here::here(),"0_project_setup","!libraries.R"))
 source(fs::path(here::here(),"0_project_setup","!directories.R"))
@@ -26,9 +25,8 @@ options(knitr.table.format = "html")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-## Figure 3 coefficient comparison of solar and chs
-```{r coef plot, echo=TRUE}
+### Figure 3. Coefficient comparison of SOLAR and CHS
+```{r coefficient plot}
 solar_coef_df <- read_csv(fs::path(dir_results,"prediction",
                                    "4_solar_model_result_with_annotation_0530.csv"))
 
@@ -43,11 +41,7 @@ full_coef_df <- solar_coef_df %>% mutate(cohort = "SOLAR") %>%
     cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)"))
   )
 
-### Create metabolites Coefficient Plots-----
-
-## Modify the annotation of 214.0261 feature
-
-
+### Create metabolites Coefficient Plots
 full_coef_df  %>% 
   filter(met_name_first %in% c("Taurocholic acid", "Allylphenol sulfate", "Caprylic acid")) %>%
   ggplot(aes(x = met_name_first,y = odds_ratio)) +
@@ -62,7 +56,7 @@ full_coef_df  %>%
   theme(panel.background = element_rect(fill="white"), 
         strip.background = element_rect(fill = "white"),
         strip.text.y = element_text(angle = 0, hjust = 0),
-        text = element_text(size = 8),
+        text = element_text(size = 10),
         # axis.title.x=element_blank(),
         axis.line.x = element_line(color = "black"),
         axis.title.y=element_blank(),
@@ -73,7 +67,7 @@ full_coef_df  %>%
                     scales = "free_x",
                     ncol = 4)
 
-# ggsave(filename = fs::path(dir_reports, "Figure 3. Effect estimates for metabolites associated with prediabetes 0522.jpg"),
-#        width = 3, height = 1.5, dpi=300)
+ggsave(filename = fs::path(dir_reports, "Figure 3. Effect estimates for metabolites associated with prediabetes 0522.jpg"),
+       width = 3, height = 1.5, dpi=300)
 ```
 

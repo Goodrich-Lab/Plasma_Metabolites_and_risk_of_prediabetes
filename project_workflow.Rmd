@@ -67,20 +67,18 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-
 ## 2) AUC comparison
 ```{r  child =fs::path(here::here(),"5_results_figures","Figure 3 AUC comparison.Rmd")}
 
 ```
-
 
 ## 3) Coefficient plot
 ```{r  child =fs::path(here::here(),"5_results_figures","Figure 4 Coefficient plot.Rmd")}
 
 ```
 
-
 ## 4) Empirical distribution of AUC
 ```{r  child =fs::path(here::here(),"5_results_figures","Figure S2 empirical distribution of auc.Rmd")}
 
 ```
+

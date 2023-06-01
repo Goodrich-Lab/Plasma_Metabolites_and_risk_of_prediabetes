@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Figure 2. AUC comparison of models 
+### Figure 2. AUC comparison of models 
 
 ```{r auc comparison plot}
 auc <- read_csv(fs::path(dir_results,
@@ -62,7 +62,7 @@ auc %>% filter(model %in% model_name) %>%
         axis.text.x = element_text(angle = 45, hjust=1)) +
   scale_color_manual(values = c("#AF7AC5", "#117A65"))
 
-ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
-       width = 8, height = 5, dpi=300)
+# ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
+#        width = 8, height = 5, dpi=300)
 ```
 ```

@@ -19,7 +19,7 @@ pre {
 }
 ```
 
-## Overall include the main model comparisons
+## Overall
 
 **Comparisons between area under the ROC curve (AUC) comparing the five different prediabetes prediction models with and without three or two selected metabolites**
 
@@ -122,13 +122,13 @@ solar_df_visit1 <- solar_df %>%
                               diabete == "Yes" ~ "Diabetes"),
          visit = "Baseline (11.09 ± 1.78)")
 
-table(solar_df_visit1$status)
+# table(solar_df_visit1$status)
 
 # Normal 
 # 143
 
-mean(solar_df_visit1$age) # 11.09055
-sd(solar_df_visit1$age) # 1.779834
+# mean(solar_df_visit1$age) # 11.09055
+# sd(solar_df_visit1$age) # 1.779834
 
 solar_df_visit2 <- solar_df %>%
   filter(!is.na(prediabete_or_diabete))%>%
@@ -140,9 +140,9 @@ solar_df_visit2 <- solar_df %>%
                               diabete == "Yes" ~ "Diabetes"), 
          visit = "Follow up visit 1 (12.43 ± 2.01)")
 
-mean(solar_df_visit2$age) # 12.43081
-sd(solar_df_visit2$age) # 2.00758
-table(solar_df_visit2$status)
+# mean(solar_df_visit2$age) # 12.43081
+# sd(solar_df_visit2$age) # 2.00758
+# table(solar_df_visit2$status)
 
    # Diabetes      Normal Prediabetes 
    #        1         105          37
@@ -157,9 +157,9 @@ solar_df_visit3 <- solar_df %>%
                               diabete == "Yes" ~ "Diabetes"), 
          visit = "Follow up visit 2 (12.43 ± 2.01)")
 
-mean(solar_df_visit3$age) # 13.15639
-sd(solar_df_visit3$age) # 1.909031
-table(solar_df_visit3$status) 
+# mean(solar_df_visit3$age) # 13.15639
+# sd(solar_df_visit3$age) # 1.909031
+# table(solar_df_visit3$status) 
 
      # Normal Prediabetes 
      #     79          30 
@@ -177,10 +177,10 @@ solar_df_finalvisit <- solar_df %>%
   mutate(visit = "Final visit (16.28 ± 2.27)",
          status = ifelse(id %in% id_name, "Diabetes", status)) 
 
-mean(solar_df_finalvisit$age) # 16.28207
-sd(solar_df_finalvisit$age) # 2.266089
+# mean(solar_df_finalvisit$age) # 16.28207
+# sd(solar_df_finalvisit$age) # 2.266089
 
-table(solar_df_finalvisit$status) #114
+# table(solar_df_finalvisit$status) #114
 
 # Diabetes      Normal Prediabetes 
 #        2         78          34 
@@ -239,7 +239,7 @@ chs_df_visit1 <- chs_df %>%
          visit = "Baseline (11.09 ± 1.78)") %>%
   filter(id %in% chs_analysis$id)
 
-table(chs_df_visit1$status)
+# table(chs_df_visit1$status)
 
 # Normal 56 
 
@@ -257,12 +257,12 @@ chs_df_finalvisit <- chs_df %>%
          visit = "Follow up visit 1 (19.88 ± 1.18)") %>%
   filter(id %in% chs_analysis$id)
 
-mean(chs_df_finalvisit$age) # 19.87804
+# mean(chs_df_finalvisit$age) # 19.87804
 
-sd(chs_df_finalvisit$age) # 1.181009
+# sd(chs_df_finalvisit$age) # 1.181009
 
 
-table(chs_df_finalvisit$status)
+# table(chs_df_finalvisit$status)
 
      # Normal Prediabetes 
      #     41           15 
@@ -302,12 +302,12 @@ solar_df_visit1_ifg <- solar_df_ifg %>%
          visit = "Baseline (11.09 ± 1.78)") %>%
   filter(id %in% solar_analysis$id)
 
-table(solar_df_visit1_ifg$status)
+# table(solar_df_visit1_ifg$status)
 
 # Normal 143 
 
-mean(solar_df_visit1_ifg$age) # 11.09
-sd(solar_df_visit1_ifg$age) # 1.78
+# mean(solar_df_visit1_ifg$age) # 11.09
+# sd(solar_df_visit1_ifg$age) # 1.78
 
 solar_df_visit2_ifg <- solar_df_ifg %>%
   filter(!is.na(prediabete_or_diabete))%>%
@@ -320,12 +320,12 @@ solar_df_visit2_ifg <- solar_df_ifg %>%
          visit = "Follow up visit 1 (12.42 ± 2.01)") %>%
   filter(id %in% solar_analysis$id)
 
-mean(solar_df_visit2_ifg$age) # 12.42263
+# mean(solar_df_visit2_ifg$age) # 12.42263
 
-sd(solar_df_visit2_ifg$age) # 2.013238
+# sd(solar_df_visit2_ifg$age) # 2.013238
 
 
-table(solar_df_visit2_ifg$status)
+# table(solar_df_visit2_ifg$status)
 
 # Diabetes      Normal Prediabetes 
 #       1         134          7
@@ -343,12 +343,12 @@ solar_df_finalvisit_ifg <- solar_df_ifg %>%
          status = ifelse(id %in% id_name, "Diabetes", status))%>%
   filter(id %in% solar_analysis$id)
 
-table(solar_df_finalvisit_ifg$status)
+# table(solar_df_finalvisit_ifg$status)
 # Diabetes      Normal Prediabetes 
 #     2         103         9
 
-mean(solar_df_finalvisit_ifg$age) # 16.26484
-sd(solar_df_finalvisit_ifg$age) # 2.26256
+# mean(solar_df_finalvisit_ifg$age) # 16.26484
+# sd(solar_df_finalvisit_ifg$age) # 2.26256
 ```
 
 ```{r chs prepare analysis data ifg}
@@ -393,7 +393,7 @@ chs_df_visit1_ifg <- chs_df_ifg %>%
          visit = "Baseline (11.09 ± 1.78)") %>%
   filter(id %in% chs_analysis$id)
 
-table(chs_df_visit1_ifg$status)
+# table(chs_df_visit1_ifg$status)
 
 # Normal 56 
 
@@ -411,12 +411,12 @@ chs_df_finalvisit_ifg <- chs_df_ifg %>%
          visit = "Follow up visit 1 (12.42 ± 2.01)") %>%
   filter(id %in% chs_analysis$id)
 
-mean(chs_df_finalvisit_ifg$age) # 12.42263
+# mean(chs_df_finalvisit_ifg$age) # 12.42263
 
-sd(chs_df_finalvisit_ifg$age) # 2.013238
+# sd(chs_df_finalvisit_ifg$age) # 2.013238
 
 
-table(chs_df_finalvisit_ifg$status)
+# table(chs_df_finalvisit_ifg$status)
 
      # Normal Prediabetes 
      #     48           8 
@@ -456,11 +456,11 @@ solar_df_visit1_igt <- solar_df_igt %>%
          visit = "Baseline (11.09 ± 1.78)")%>%
   filter(id %in% solar_analysis$id)
 
-table(solar_df_visit1_igt$status)
+# table(solar_df_visit1_igt$status)
  # Normal 143
 
-mean(solar_df_visit1_igt$age) # 11.09055
-sd(solar_df_visit1_igt$age) # 1.779834
+# mean(solar_df_visit1_igt$age) # 11.09055
+# sd(solar_df_visit1_igt$age) # 1.779834
 
 solar_df_visit2_igt <- solar_df_igt %>%
   filter(!is.na(prediabete_or_diabete))%>%
@@ -473,10 +473,10 @@ solar_df_visit2_igt <- solar_df_igt %>%
          visit = "Follow up visit 1 (12.43 ± 2.00)") %>%
   filter(id %in% solar_analysis$id)
 
-mean(solar_df_visit2_igt$age) # 12.42841
-sd(solar_df_visit2_igt$age) # 2.005539
+# mean(solar_df_visit2_igt$age) # 12.42841
+# sd(solar_df_visit2_igt$age) # 2.005539
 
-table(solar_df_visit2_igt$status)
+# table(solar_df_visit2_igt$status)
      # Normal Prediabetes 
      #    124          18 
 
@@ -494,12 +494,12 @@ solar_df_finalvisit_igt <- solar_df_igt %>%
          status = ifelse(id %in% id_name, "Diabetes", status)) %>%
   filter(id %in% solar_analysis$id)
 
-table(solar_df_finalvisit_igt$status)
+# table(solar_df_finalvisit_igt$status)
 # Diabetes      Normal Prediabetes 
 #     2         93          19
 
-mean(solar_df_finalvisit_igt$age) # 16.27329
-sd(solar_df_finalvisit_igt$age) # 2.264919
+# mean(solar_df_finalvisit_igt$age) # 16.27329
+# sd(solar_df_finalvisit_igt$age) # 2.264919
 ```
 
 
@@ -545,7 +545,7 @@ chs_df_visit1_igt <- chs_df_igt %>%
          visit = "Baseline (11.09 ± 1.78)") %>%
   filter(id %in% chs_analysis$id)
 
-table(chs_df_visit1_igt$status)
+# table(chs_df_visit1_igt$status)
 
 # Normal 56 
 
@@ -563,12 +563,12 @@ chs_df_finalvisit_igt <- chs_df_igt %>%
          visit = "Follow up visit 1 (19.89 ± 1.19)") %>%
   filter(id %in% chs_analysis$id)
 
-mean(chs_df_finalvisit_igt$age) # 19.88666
+# mean(chs_df_finalvisit_igt$age) # 19.88666
 
-sd(chs_df_finalvisit_igt$age) # 1.190113
+# sd(chs_df_finalvisit_igt$age) # 1.190113
 
 
-table(chs_df_finalvisit_igt$status)
+# table(chs_df_finalvisit_igt$status)
 
 # Diabetes      Normal Prediabetes 
 #           1          45           9 
@@ -596,7 +596,7 @@ solar_data_model <- data_analysis %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(solar_data_model$diabete_change_di)
+# table(solar_data_model$diabete_change_di)
 #105 38
 
 # logistic regression----
@@ -694,7 +694,7 @@ chs_data_model <- data_analysis %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(chs_data_model$diabete_change_di)
+# table(chs_data_model$diabete_change_di)
 #48 8
 
 # logistic regression----
@@ -791,7 +791,7 @@ auc_solar <- auc1_solar %>%
   bind_rows(auc3_solar) %>%
   bind_rows(auc4_solar) %>%
   bind_rows(auc5_solar) %>%
-  mutate(outcome_type = "IFG")
+  mutate(outcome_type = "Prediabetes")
 
 ```
 
@@ -812,12 +812,13 @@ auc_chs <- auc1_chs %>%
   bind_rows(auc3_chs) %>%
   bind_rows(auc4_chs) %>%
   bind_rows(auc5_chs) %>%
-  mutate(outcome_type = "IFG")
+  mutate(outcome_type = "Prediabetes")
 
 auc <- auc_solar %>%
   bind_rows(auc_chs)%>%
   mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
 
+auc
 # write_csv(auc,
 #           fs::path(dir_results,
 #                    "prediction",
@@ -828,7 +829,7 @@ auc <- auc_solar %>%
 
 ## Prediction model with outcome defined by only IFG
 **No prediabetes at baseline**
-```{r solar model ifg}
+```{r solar model ifg, warning=FALSE}
 solar_df_outcome_ifg <-  solar_df_visit2_ifg %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(solar_df_visit1_ifg %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
@@ -848,7 +849,7 @@ solar_data_model_ifg <- data_analysis_ifg %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(solar_data_model_ifg$diabete_change_di)
+# table(solar_data_model_ifg$diabete_change_di)
 #134 8
 
 # logistic regression----
@@ -918,30 +919,10 @@ solar_pred_ifg <- solar_data_model_ifg %>%
                 pred_grf_met = data.frame(pred = predict(fit_ifg_grf_met, type = "response"))$pred,
                 pred_met = data.frame(pred = predict(fit_ifg_met, type = "response"))$pred) %>% bind_cols(data_analysis_ifg %>% select(id))
 
-# print("GRF + SRF + Metabolites")
-# roc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_full)
-# ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_full)
-# # 0.7758(0.6164-0.9352)
-# 
-# print("GRF")
-# roc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf)
-# ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf)
-# # 0.7105(0.5475-0.8736)
-# 
-# print("GRF + SRF")
-# roc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf_srf)
-# ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_grf_srf)
-# #0.7361 (0.5608-0.9113)
-# 
-# print("Metabolites")
-# roc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_met)
-# ci.auc(solar_pred_ifg$diabete_change_di, solar_pred_ifg$pred_met)
-# # 0.564(0.4061-0.7219)
-
 ```
 
 
-```{r chs model ifg}
+```{r chs model ifg, warning=FALSE}
 chs_df_outcome_ifg <-  chs_df_finalvisit_ifg %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1_ifg %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
@@ -961,7 +942,7 @@ chs_data_model_ifg <- data_analysis_ifg %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(chs_data_model_ifg$diabete_change_di)
+# table(chs_data_model_ifg$diabete_change_di)
 #48 8
 
 # logistic regression----
@@ -1076,6 +1057,7 @@ auc_ifg <- auc_solar_ifg %>%
   bind_rows(auc_chs_ifg)%>%
   mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
 
+auc_ifg
 # write_csv(auc_ifg,
 #           fs::path(dir_results,
 #                    "prediction",
@@ -1104,7 +1086,7 @@ solar_data_model_igt <- data_analysis_igt %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(solar_data_model_igt$diabete_change_di)
+# table(solar_data_model_igt$diabete_change_di)
 #93 21
 
 # logistic regression----
@@ -1174,7 +1156,7 @@ solar_pred_igt <- solar_data_model_igt %>%
                 pred_met = data.frame(pred = predict(fit_igt_met, type = "response"))$pred) %>% bind_cols(data_analysis_igt %>% select(id))
 ```
 
-```{r chs model igt}
+```{r chs model igt, warning=FALSE}
 chs_df_outcome_igt <-  chs_df_finalvisit_igt %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1_igt %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
@@ -1194,7 +1176,7 @@ chs_data_model_igt <- data_analysis_igt %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(chs_data_model_igt$diabete_change_di)
+# table(chs_data_model_igt$diabete_change_di)
 #48 8
 
 # logistic regression----
@@ -1265,7 +1247,7 @@ chs_pred_igt <- chs_data_model_igt %>%
                 pred_met = data.frame(pred = predict(fit_igt_met, type = "response"))$pred) %>% bind_cols(data_analysis_igt %>% select(id))
 ```
 
-## AUC of all models in SOLAR - IGT
+## AUC of all models  - IGT
 ```{r aucs of models IGT, echo=TRUE}
 auc1_solar <- data.frame(auc = ci.auc(solar_pred_igt$diabete_change_di, solar_pred_igt$pred_grf)[2], ci_low = ci.auc(solar_pred_igt$diabete_change_di, solar_pred_igt$pred_grf)[1], ci_high = ci.auc(solar_pred_igt$diabete_change_di, solar_pred_igt$pred_grf)[3], model = "GRF", cohort = "SOLAR (discovery)", note = "General Risk Factor")
 
@@ -1310,6 +1292,7 @@ auc_igt <- auc_solar_igt %>%
   bind_rows(auc_chs_igt) %>%
   mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
 
+auc_igt
 
 # write_csv(auc_igt,
 #           fs::path(dir_results,
@@ -1325,24 +1308,13 @@ solar_df_a1c <- sol$longitudinal %>%
   dplyr::select(id, visit, og_glu_5, og_glu120, age, sex, bmi, tot_chol, tag, a1c) %>%
   mutate(
     prediabete = case_when(
-    a1c <= 6.4 & a1c >= 5.7 ~ "Yes",
-    # og_glu_5 >= 100 & og_glu_5 <= 125 ~ "Yes",
-    # og_glu120 >= 140 & og_glu120 <= 199 ~ "Yes", 
-    is.na(a1c) 
-    # &is.na(og_glu_5) 
-    # & is.na(og_glu120) 
-    ~ NA_character_,
+    a1c <= 6.4 & a1c >= 5.7 ~ "Yes", 
+    is.na(a1c) ~ NA_character_,
     TRUE ~ "No"
     ), 
          diabete = case_when(
            a1c > 6.4 ~ "Yes",
-           # og_glu_5 > 125 ~ "Yes",
-           # og_glu120 > 199 ~ "Yes",
-           is.na(a1c) 
-           # & is.na(og_glu_5) 
-           # & is.na(og_glu120)
-           ~
-             NA_character_,
+           is.na(a1c)  ~ NA_character_,
            TRUE ~ "No"
          ),
     prediabete_or_diabete = case_when(
@@ -1358,19 +1330,18 @@ solar_df_visit1_a1c <- solar_df_a1c %>%
   group_by(id) %>%
   arrange(visit) %>%
   slice(1) %>% 
-  # filter(id %in% solar_analysis$id)%>%
   mutate(status = case_when(prediabete_or_diabete == "No" ~ "Normal",
                               prediabete == "Yes"~ "Prediabetes",
                               diabete == "Yes" ~ "Diabetes"),
          visit = "Baseline (11.09 ± 1.78)") %>%
   filter(id %in% solar_analysis$id)
 
-table(solar_df_visit1_a1c$status)
+# table(solar_df_visit1_a1c$status)
 
 # Normal 143 
 
-mean(solar_df_visit1_a1c$age) # 11.09
-sd(solar_df_visit1_a1c$age) # 1.78
+# mean(solar_df_visit1_a1c$age) # 11.09
+# sd(solar_df_visit1_a1c$age) # 1.78
 
 solar_df_visit2_a1c <- solar_df_a1c %>%
   filter(!is.na(prediabete_or_diabete))%>%
@@ -1383,12 +1354,12 @@ solar_df_visit2_a1c <- solar_df_a1c %>%
          visit = "Follow up visit 1 (12.42 ± 2.01)") %>%
   filter(id %in% solar_analysis$id)
 
-mean(solar_df_visit2_a1c$age) # 12.42263
+# mean(solar_df_visit2_a1c$age) # 12.42263
 
-sd(solar_df_visit2_a1c$age) # 2.013238
+# sd(solar_df_visit2_a1c$age) # 2.013238
 
 
-table(solar_df_visit2_a1c$status)
+# table(solar_df_visit2_a1c$status)
 
      # Normal Prediabetes 
      #    110          15
@@ -1406,12 +1377,12 @@ solar_df_finalvisit_a1c <- solar_df_a1c %>%
          status = ifelse(id %in% id_name, "Diabetes", status))%>%
   filter(id %in% solar_analysis$id)
 
-table(solar_df_finalvisit_a1c$status)
+# table(solar_df_finalvisit_a1c$status)
 # Diabetes      Normal Prediabetes 
 #     2         83         20
 
-mean(solar_df_finalvisit_a1c$age) # 16.26484
-sd(solar_df_finalvisit_a1c$age) # 2.26256
+# mean(solar_df_finalvisit_a1c$age) # 16.26484
+# sd(solar_df_finalvisit_a1c$age) # 2.26256
 
 data_a1c <- bind_rows(solar_df_visit1_a1c, solar_df_visit2_a1c) %>% 
   bind_rows(solar_df_finalvisit_a1c) %>%
@@ -1434,22 +1405,12 @@ chs_df_a1c <- chs %>%
   mutate(
     prediabete = case_when(
     a1c <= 6.4 & a1c >= 5.7 ~ "Yes",
-    # og_glu_5 >= 100 & og_glu_5 <= 125 ~ "Yes",
-    # og_glu120 >= 140 & og_glu120 <= 199 ~ "Yes", 
-    is.na(a1c) 
-    # &is.na(og_glu_5) 
-    # & is.na(og_glu120) 
-    ~ NA_character_,
+    is.na(a1c) ~ NA_character_,
     TRUE ~ "No"
     ), 
          diabete = case_when(
            a1c > 6.4 ~ "Yes",
-           # og_glu_5 > 125 ~ "Yes",
-           # og_glu120 > 199 ~ "Yes",
-           is.na(a1c) 
-           # &is.na(og_glu_5) 
-           # & is.na(og_glu120) 
-           ~ NA_character_,
+           is.na(a1c)~ NA_character_,
            TRUE ~ "No"
          ),
     prediabete_or_diabete = case_when(
@@ -1467,14 +1428,13 @@ chs_df_visit1_a1c <- chs_df_a1c %>%
   group_by(id) %>%
   arrange(visit) %>%
   slice(1) %>% 
-  # filter(id %in% solar_analysis$id)%>%
   mutate(status = case_when(prediabete_or_diabete == "No" ~ "Normal",
                               prediabete == "Yes"~ "Prediabetes",
                               diabete == "Yes" ~ "Diabetes"),
          visit = "Baseline (11.09 ± 1.78)") %>%
   filter(id %in% chs_analysis$id)
 
-table(chs_df_visit1_a1c$status)
+# table(chs_df_visit1_a1c$status)
 
 # Normal 56 
 
@@ -1492,12 +1452,12 @@ chs_df_finalvisit_a1c <- chs_df_a1c %>%
          visit = "Follow up visit 1 (12.42 ± 2.01)") %>%
   filter(id %in% chs_analysis$id)
 
-mean(chs_df_finalvisit_a1c$age) # 12.42263
+# mean(chs_df_finalvisit_a1c$age) # 12.42263
 
-sd(chs_df_finalvisit_a1c$age) # 2.013238
+# sd(chs_df_finalvisit_a1c$age) # 2.013238
 
 
-table(chs_df_finalvisit_a1c$status)
+# table(chs_df_finalvisit_a1c$status)
 
 # Normal Prediabetes 
 #          55           1 
@@ -1526,7 +1486,7 @@ solar_data_model_a1c <- data_analysis_a1c %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(solar_data_model_a1c$diabete_change_di)
+# table(solar_data_model_a1c$diabete_change_di)
 #103 11
 
 # logistic regression----
@@ -1596,26 +1556,6 @@ solar_pred_a1c <- solar_data_model_a1c %>%
                 pred_grf_met = data.frame(pred = predict(fit_a1c_grf_met, type = "response"))$pred,
                 pred_met = data.frame(pred = predict(fit_a1c_met, type = "response"))$pred) %>% bind_cols(data_analysis_a1c %>% select(id))
 
-# print("GRF + SRF + Metabolites")
-# roc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_full)
-# ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_full)
-# # 0.7758(0.6164-0.9352)
-# 
-# print("GRF")
-# roc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf)
-# ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf)
-# # 0.7105(0.5475-0.8736)
-# 
-# print("GRF + SRF")
-# roc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf_srf)
-# ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_grf_srf)
-# #0.7361 (0.5608-0.9113)
-# 
-# print("Metabolites")
-# roc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_met)
-# ci.auc(solar_pred_a1c$diabete_change_di, solar_pred_a1c$pred_met)
-# # 0.564(0.4061-0.7219)
-
 ```
 
 ```{r chs model a1c}
@@ -1638,7 +1578,7 @@ chs_data_model_a1c <- data_analysis_a1c %>%
   mutate(diabete_change_di = factor(diabete_change_di1)) %>% select(-diabete_change_di1)
 
 
-table(chs_data_model_a1c$diabete_change_di)
+# table(chs_data_model_a1c$diabete_change_di)
 #55 1
 
 # logistic regression----
@@ -1730,6 +1670,8 @@ auc_solar_a1c <- auc1_solar %>%
   bind_rows(auc4_solar) %>%
   bind_rows(auc5_solar) %>%
   mutate(outcome_type = "a1c")
+
+auc_solar_a1c
 ```
 
 ```{r chs aucs of models a1c, echo=TRUE}
@@ -1761,7 +1703,8 @@ auc_solar_a1c <- auc1_solar %>%
 #                    "4_auc_df_a1c.csv"))
 ```
 
-## Figure 2. AUC comparison of models 
+## Figure 2. AUC comparison of models
+### Prediabetes: pvalue auc comparison
 ```{r pvalue auc comparison prediabetes}
 # model comparison
 pvalue_df <- data.frame(p_value = c(
@@ -1808,9 +1751,11 @@ model = c("GRF + metabolites vs GRF","metabolites vs GRF", "GRF + SRF + metaboli
 cohort = c("SOLAR", "SOLAR", "SOLAR", "SOLAR","SOLAR", "SOLAR","CHS", "CHS", "CHS","CHS", "CHS","CHS"
            ))
 
+pvalue_df
 # write.csv(pvalue_df, fs::path(dir_results, "model_comparison_pvalues_df.csv"))
 ```
 
+### IFG: pvalue auc comparison
 ```{r pvalue auc comparison IFG}
 # model comparison
 pvalue_df_ifg <- data.frame(p_value = c(
@@ -1857,10 +1802,11 @@ model = c("GRF + metabolites vs GRF","metabolites vs GRF", "GRF + SRF + metaboli
           ), 
 cohort = c("SOLAR", "SOLAR", "SOLAR", "SOLAR","SOLAR", "SOLAR","CHS", "CHS", "CHS","CHS", "CHS","CHS"
            ))
-
+pvalue_df_ifg
 # write.csv(pvalue_df_ifg, fs::path(dir_results, "model_comparison_pvalues_df_IFG.csv"))
 ```
 
+### IGT: pvalue auc comparison
 ```{r pvalue auc comparison igt}
 # model comparison
 pvalue_df_igt <- data.frame(p_value = c(
@@ -1908,10 +1854,11 @@ model = c("GRF + metabolites vs GRF","metabolites vs GRF", "GRF + SRF + metaboli
           ), 
 cohort = c("SOLAR", "SOLAR", "SOLAR", "SOLAR","SOLAR", "SOLAR","CHS", "CHS", "CHS","CHS", "CHS","CHS"
            ))
-
+pvalue_df_igt
 # write.csv(pvalue_df_igt, fs::path(dir_results, "model_comparison_pvalues_df_IGT.csv"))
 ```
 
+### Hba1c: pvalue auc comparison
 ```{r pvalue auc comparison a1c}
 # model comparison
 pvalue_df_a1c <- data.frame(p_value = c(
@@ -1939,6 +1886,7 @@ model = c("GRF + metabolites vs GRF","metabolites vs GRF", "GRF + SRF + metaboli
 cohort = c("SOLAR", "SOLAR", "SOLAR", "SOLAR","SOLAR", "SOLAR"
            ))
 
+pvalue_df_a1c
 # write.csv(pvalue_df_a1c, fs::path(dir_results, "model_comparison_pvalues_df_a1c.csv"))
 ```
 
@@ -2051,7 +1999,7 @@ p3_1 <- cowplot::plot_grid(
 ```
 
 ## combine auc comparison figures
-```{r combine result figures}
+```{r combine result figures, fig.width=10, fig.height=15}
 (p <- cowplot::plot_grid(
   NULL, p3_1, NULL, p1, NULL, p2,
   ncol = 1,
@@ -2059,8 +2007,8 @@ p3_1 <- cowplot::plot_grid(
   rel_heights = c(.03, 0.35, .03, 0.35, 0.03, 0.65),
   labels = c("a) a1c", "", "b) IFG","","c) IGT", "")))
 
-ggsave(p, filename = fs::path(dir_reports, "Figure 2. Prediction performance of models.jpg"),
-width = 8, height = 12, dpi=300,bg = "white")
+# ggsave(p, filename = fs::path(dir_reports, "Figure 2. Prediction performance of models.jpg"),
+# width = 8, height = 12, dpi=300,bg = "white")
 ```
 
 
