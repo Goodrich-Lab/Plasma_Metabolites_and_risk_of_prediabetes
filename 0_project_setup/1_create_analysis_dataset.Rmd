@@ -498,9 +498,13 @@ chs_df <- chs_df_w2 %>% tidylog::left_join(feature_chs_imputed, by = "id")
 
 ## Prepare analysis ready completed data
 **1. Exclude participants who meets at least one of the following criteria** 
+
 **1) no biobanked fasting plasma**
+
 **2) no follow-up visit**
+
 **3) prediabetes at baseline**
+
 **4) missing total cholesterol and triglyceride**
 
 ![Study population Flow Chart](/Users/hongxuwa/Dropbox (USC Lab)/Chatzi Projects (Active)/Env Chem SOL-CHS/Analysis/2_ongoing/SOL CHS Metabolomics Diabetes (Hongxu)/3_Reports/1 - Figure 1.png)

@@ -47,7 +47,7 @@ diabete_change\
 **chs covars**:sex, bmi, age, hispanic,fasting glucose, total cholesterol, triglycerides\
 
 ## MWAS analysis
-```{r mwas analysis, echo = TRUE}
+```{r mwas analysis, echo = TRUE, warning = FALSE}
 # variables of outcome, covars, metabolites-----
 outcomes <- c("diabete_change_di")
 
