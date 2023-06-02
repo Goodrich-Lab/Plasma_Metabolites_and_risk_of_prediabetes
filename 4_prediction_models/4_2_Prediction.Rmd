@@ -1,5 +1,5 @@
 ---
-title: "Reviewer1_Different_outcomes"
+title: "Prediction"
 author: "Hongxu Wang"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
@@ -30,15 +30,6 @@ solar_analysis <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data
 
 chs_analysis <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
 
-## participants that have diabetes at last visit
-id_name <- c("rO2_sol_00068",
-             "r01_sol_00029",
-             "r02_sol_00093",
-             "r02_sol_00086",
-             "r02_sol_00116",
-             "r03_sol_00220"
-             )
-
 selected_feature_name <-
   c("214.026117480542_35.1421775112176",
     "125.097384256509_58.1004384860803")
@@ -50,16 +41,6 @@ sol <- read_rds(fs::path(dir_data_analysis,
 
 chs <- read_rds(fs::path(dir_data_analysis,
                                   "CHS MetaAir MetaChem Cleaned Redcap and Exposures Outcome Data long V2.rds"))
-
-# Load Metabolomics Feature Tables 
-ftdata <- read_rds(fs::path(dir_data,
-                            "metabolomics",
-                   "sol_chs_batch_cor_scaled_untargeted_fts.rds"))
-
-# Obtain Feature metadata 
-ft_metadata <- ftdata$solar %>% 
-  modify(~data.frame(feature = colnames(.)[-1])) %>% 
-  bind_rows(.id = "mode")
 
 # Load Exposure Outcome Data 
 sol <- read_rds(fs::path(dir_data_analysis,
@@ -155,27 +136,6 @@ solar_df_visit3 <- solar_df %>%
 
      # Normal Prediabetes 
      #     79          30 
-
-solar_df_finalvisit <- solar_df %>%
-  filter(!is.na(prediabete_or_diabete))%>%
-  group_by(id) %>%
-  arrange(desc(visit)) %>%
-  slice(1) %>%
-  mutate(status = case_when(prediabete_or_diabete == "No" ~ "Normal",
-                              prediabete == "Yes"~ "Prediabetes",
-                              diabete == "Yes" ~ "Diabetes")) %>%
-  mutate(visit = ifelse(id == "r02_sol_00116", 3, visit)) %>%
-  filter(visit !=1& visit!= 2) %>%
-  mutate(visit = "Final visit (16.28 ± 2.27)",
-         status = ifelse(id %in% id_name, "Diabetes", status)) 
-
-# mean(solar_df_finalvisit$age) # 16.28207
-# sd(solar_df_finalvisit$age) # 2.266089
-# 
-# table(solar_df_finalvisit$status) #114
-
-# Diabetes      Normal Prediabetes 
-#        2         78          34 
 ```
 
 ```{r chs prepare analysis data prediabetes}
@@ -322,25 +282,6 @@ solar_df_visit2_ifg <- solar_df_ifg %>%
 # Diabetes      Normal Prediabetes 
 #       1         134          7
 
-solar_df_finalvisit_ifg <- solar_df_ifg %>%
-  filter(!is.na(prediabete_or_diabete))%>%
-  group_by(id) %>%
-  arrange(desc(visit)) %>%
-  slice(1) %>%
-  mutate(status = case_when(prediabete_or_diabete == "No" ~ "Normal",
-                              prediabete == "Yes"~ "Prediabetes",
-                              diabete == "Yes" ~ "Diabetes")) %>%
-  filter(visit !=1& visit!= 2) %>%
-  mutate(visit = "Final visit (16.26 ± 2.26)",
-         status = ifelse(id %in% id_name, "Diabetes", status))%>%
-  filter(id %in% solar_analysis$id)
-
-# table(solar_df_finalvisit_ifg$status)
-# # Diabetes      Normal Prediabetes 
-# #     2         103         9
-# 
-# mean(solar_df_finalvisit_ifg$age) # 16.26484
-# sd(solar_df_finalvisit_ifg$age) # 2.26256
 ```
 
 ```{r chs prepare analysis data ifg prediction}
@@ -471,27 +412,6 @@ solar_df_visit2_igt <- solar_df_igt %>%
 # table(solar_df_visit2_igt$status)
      # Normal Prediabetes 
      #    124          18 
-
-solar_df_finalvisit_igt <- solar_df_igt %>%
-  filter(!is.na(prediabete_or_diabete))%>%
-  group_by(id) %>%
-  arrange(desc(visit)) %>%
-  slice(1) %>%
-  mutate(status = case_when(prediabete_or_diabete == "No" ~ "Normal",
-                              prediabete == "Yes"~ "Prediabetes",
-                              diabete == "Yes" ~ "Diabetes")) %>%
-    mutate(visit = ifelse(id == "r02_sol_00116", 3, visit)) %>%
-  filter(visit !=1&visit != 2) %>%
-  mutate(visit = "Final visit (16.27 ± 2.26)",
-         status = ifelse(id %in% id_name, "Diabetes", status)) %>%
-  filter(id %in% solar_analysis$id)
-
-# table(solar_df_finalvisit_igt$status)
-# # Diabetes      Normal Prediabetes 
-# #     2         93          19
-# 
-# mean(solar_df_finalvisit_igt$age) # 16.27329
-# sd(solar_df_finalvisit_igt$age) # 2.264919
 ```
 
 
