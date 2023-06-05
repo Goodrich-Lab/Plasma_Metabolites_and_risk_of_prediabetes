@@ -52,16 +52,6 @@ selected_feature_name <-
 #     "125.097384256509_58.1004384860803"
 # )
 
-# Load Metabolomics Feature Tables 
-ftdata <- read_rds(fs::path(dir_data,
-                            "metabolomics",
-                   "sol_chs_batch_cor_scaled_untargeted_fts.rds"))
-
-# Obtain Feature metadata 
-ft_metadata <- ftdata$solar %>% 
-  modify(~data.frame(feature = colnames(.)[-1])) %>% 
-  bind_rows(.id = "mode")
-
 # Load Exposure Outcome Data 
 sol <- read_rds(fs::path(dir_data_analysis,
                          "SOLAR exposure outcome data HRE PFAS.rds"))
@@ -219,7 +209,7 @@ chs_df_visit1 <- chs_df %>%
 # mean(solar_df_visit1$age) # 11.09
 # sd(solar_df_visit1$age) # 1.78
 
-chs_df_finalvisit <- chs_df %>%
+chs_df_visit2 <- chs_df %>%
   filter(!is.na(prediabete_or_diabete))%>%
   group_by(id) %>%
   arrange(visit) %>%
@@ -230,12 +220,12 @@ chs_df_finalvisit <- chs_df %>%
          visit = "Follow up visit 1 (19.88 ± 1.18)") %>%
   filter(id %in% chs_analysis$id)
 
-# mean(chs_df_finalvisit$age) # 19.87804
+# mean(chs_df_visit2$age) # 19.87804
 
-# sd(chs_df_finalvisit$age) # 1.181009
+# sd(chs_df_visit2$age) # 1.181009
 
 
-# table(chs_df_finalvisit$status)
+# table(chs_df_visit2$status)
 
      # Normal Prediabetes 
      #     41           15 
@@ -353,7 +343,7 @@ chs_df_visit1_ifg <- chs_df_ifg %>%
 # mean(solar_df_visit1_ifg$age) # 11.09
 # sd(solar_df_visit1_ifg$age) # 1.78
 
-chs_df_finalvisit_ifg <- chs_df_ifg %>%
+chs_df_visit2_ifg <- chs_df_ifg %>%
   filter(!is.na(prediabete_or_diabete))%>%
   group_by(id) %>%
   arrange(visit) %>%
@@ -364,12 +354,12 @@ chs_df_finalvisit_ifg <- chs_df_ifg %>%
          visit = "Follow up visit 1 (12.42 ± 2.01)") %>%
   filter(id %in% chs_analysis$id)
 
-# mean(chs_df_finalvisit_ifg$age) # 12.42263
+# mean(chs_df_visit2_ifg$age) # 12.42263
 
-# sd(chs_df_finalvisit_ifg$age) # 2.013238
+# sd(chs_df_visit2_ifg$age) # 2.013238
 
 
-# table(chs_df_finalvisit_ifg$status)
+# table(chs_df_visit2_ifg$status)
 
      # Normal Prediabetes 
      #     48           8 
@@ -484,7 +474,7 @@ chs_df_visit1_igt <- chs_df_igt %>%
 # mean(solar_df_visit1_igt$age) # 11.09
 # sd(solar_df_visit1_igt$age) # 1.78
 
-chs_df_finalvisit_igt <- chs_df_igt %>%
+chs_df_visit2_igt <- chs_df_igt %>%
   filter(!is.na(prediabete_or_diabete))%>%
   group_by(id) %>%
   arrange(visit) %>%
@@ -495,12 +485,12 @@ chs_df_finalvisit_igt <- chs_df_igt %>%
          visit = "Follow up visit 1 (19.89 ± 1.19)") %>%
   filter(id %in% chs_analysis$id)
 
-# mean(chs_df_finalvisit_igt$age) # 19.88666
+# mean(chs_df_visit2_igt$age) # 19.88666
 
-# sd(chs_df_finalvisit_igt$age) # 1.190113
+# sd(chs_df_visit2_igt$age) # 1.190113
 
 
-# table(chs_df_finalvisit_igt$status)
+# table(chs_df_visit2_igt$status)
 
 # Diabetes      Normal Prediabetes 
 #           1          45           9 
@@ -607,7 +597,7 @@ solar_pred <- solar_data_model %>%
 ```
 
 ```{r chs model prediabetes}
-chs_df_outcome <-  chs_df_finalvisit %>%
+chs_df_outcome <-  chs_df_visit2 %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1 %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
   filter(!status_first == "Prediabetes") # restrict to only normal at visit one
@@ -855,7 +845,7 @@ solar_pred_ifg <- solar_data_model_ifg %>%
 
 
 ```{r chs model ifg, warning=FALSE}
-chs_df_outcome_ifg <-  chs_df_finalvisit_ifg %>%
+chs_df_outcome_ifg <-  chs_df_visit2_ifg %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1_ifg %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
   filter(!status_first == "Prediabetes") # restrict to only normal at visit one
@@ -1089,7 +1079,7 @@ solar_pred_igt <- solar_data_model_igt %>%
 ```
 
 ```{r chs model igt, warning=FALSE}
-chs_df_outcome_igt <-  chs_df_finalvisit_igt %>%
+chs_df_outcome_igt <-  chs_df_visit2_igt %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1_igt %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
   filter(!status_first == "Prediabetes") # restrict to only normal at visit one
@@ -1373,7 +1363,7 @@ chs_df_visit1_a1c <- chs_df_a1c %>%
 # mean(solar_df_visit1_a1c$age) # 11.09
 # sd(solar_df_visit1_a1c$age) # 1.78
 
-chs_df_finalvisit_a1c <- chs_df_a1c %>%
+chs_df_visit2_a1c <- chs_df_a1c %>%
   filter(!is.na(prediabete_or_diabete))%>%
   group_by(id) %>%
   arrange(visit) %>%
@@ -1384,12 +1374,12 @@ chs_df_finalvisit_a1c <- chs_df_a1c %>%
          visit = "Follow up visit 1 (12.42 ± 2.01)") %>%
   filter(id %in% chs_analysis$id)
 
-# mean(chs_df_finalvisit_a1c$age) # 12.42263
+# mean(chs_df_visit2_a1c$age) # 12.42263
 
-# sd(chs_df_finalvisit_a1c$age) # 2.013238
+# sd(chs_df_visit2_a1c$age) # 2.013238
 
 
-# table(chs_df_finalvisit_a1c$status)
+# table(chs_df_visit2_a1c$status)
 
 # Normal Prediabetes 
 #          55           1 
@@ -1491,7 +1481,7 @@ solar_pred_a1c <- solar_data_model_a1c %>%
 ```
 
 ```{r chs model a1c}
-chs_df_outcome_a1c <-  chs_df_finalvisit_a1c %>%
+chs_df_outcome_a1c <-  chs_df_visit2_a1c %>%
   dplyr::rename(status_last = status) %>% select(id, status_last) %>% left_join(chs_df_visit1_a1c %>% dplyr::rename(status_first = status) %>% select(id, status_first)) %>%
   mutate(diabete_change_di1 = ifelse(status_first == status_last, "No", "Yes")) %>%
   filter(!status_first == "Prediabetes") # restrict to only normal at visit one
