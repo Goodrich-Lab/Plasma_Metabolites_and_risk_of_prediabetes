@@ -1,0 +1,245 @@
+---
+title: "AUC comparison"
+author: "Hongxu Wang"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+
+```{r plots data setup, include = FALSE, echo = FALSE}
+source(fs::path(here::here(),"0_project_setup","!libraries.R"))
+source(fs::path(here::here(),"0_project_setup","!directories.R"))
+source(fs::path(here::here(),"0_project_setup","!set_exposure_outcome_vars.R"))
+
+sol_data <- read_rds(fs::path(dir_data_analysis, "SOLAR analysis full data.rds"))
+
+chs_data <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds"))
+
+solar_ft <- read_rds(fs::path(dir_data_analysis, "SOLAR feature data all modes.rds"))
+
+options(knitr.table.format = "html")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Figure 2.1. AUC comparison of models 
+
+```{r auc comparison plot}
+auc <- read_csv(fs::path(dir_results,
+                         "prediction",
+                         "4_auc_df.csv"))
+### Create auc comparision plots-----
+model_name <- c("metabolites","GRF + SRF + metabolites","GRF + metabolites","GRF + SRF","GRF")
+
+auc <- auc %>% mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
+
+p1 <- auc %>% filter(model %in% model_name) %>%
+  ggplot(aes(y = factor(model, levels = model_name), x = auc)) +
+  geom_point(size = 1, position =position_dodge(width = 0.3)) +
+  geom_errorbar(aes(xmin = ci_low,
+                    xmax = ci_high),
+                width = 0.2, 
+                position =position_dodge(width = 0.3)) +
+  xlab("AUC (95% CI)") +
+  geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey") +
+  facet_wrap(~cohort) +
+  theme(panel.background = element_rect(fill="white"), 
+        # panel.grid = element_blank(),
+        strip.background = element_rect(fill = "white"),
+        strip.text.x = element_text(angle = 0, hjust = 0),
+        text = element_text(size = 10),
+        axis.title.y =element_blank(),
+        axis.line.y = element_line(color = "black"),
+        # axis.title.y=element_blank(),
+        axis.line.x = element_line(color = "black"),
+        legend.title = element_blank(),
+        legend.position="none"
+        ) 
+
+# ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
+#        width = 8, height = 5, dpi=300)
+```
+
+
+### Figure 2.2. Coefficient comparison of SOLAR and CHS
+```{r coefficient plot}
+solar_coef_df <- read_csv(fs::path(dir_results,"prediction",
+                                   "4_solar_model_result_with_annotation_0530.csv"))
+
+chs_coef_df <- read_csv(fs::path(dir_results,"prediction",
+                                   "4_chs_model_result_with_annotation_0530.csv"))
+
+full_coef_df <- solar_coef_df %>% mutate(cohort = "SOLAR") %>%
+  bind_rows(chs_coef_df %>% mutate(cohort = "CHS")) %>%
+  mutate(
+    cohort = ifelse(cohort == "SOLAR", "SOLAR (discovery)", "CHS (validation)")) %>%
+  mutate(
+    cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)"))
+  )
+
+full_coef_df_plot <- full_coef_df  %>% 
+  filter(met_name_first %in% c("Taurocholic acid", "Allylphenol sulfate", "Caprylic acid")) %>%
+  mutate(met_name_first = case_when(met_name_first == 
+                                      "Taurocholic acid" ~ "Taurocholic Acid  (Bile Acid)", 
+                                    met_name_first == "Allylphenol sulfate" ~ "Allylphenol Sulfate (Polyphenol)",
+         met_name_first == "Caprylic acid" ~ "Caprylic Acid      (MCFA)"))
+
+### Create metabolites Coefficient Plots
+p2 <- full_coef_df_plot %>%
+  ggplot(aes(y = met_name_first,x = odds_ratio)) +
+  geom_point(size = 1) +
+  geom_errorbar(aes(xmin = exp_conf_low,
+                    xmax = exp_conf_high),
+                width = 0.2) +
+  geom_vline(xintercept = 1, linetype = 2, color = "grey") +
+  xlab("Odds Ratio (95% CI)") +
+  # scale_x_discrete(limits = c( "Taurocholic acid","Caprylic acid","Allylphenol sulfate")) +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 19)) +
+  theme(panel.background = element_rect(fill="white"), 
+        strip.background = element_rect(fill = "white"),
+        # strip.text.x = element_text(angle = 0, hjust = 0),
+        strip.text.x = element_blank(),
+        text = element_text(size = 10),
+        axis.title.y=element_blank(),
+        # axis.text.y = element_text(angle = 45, hjust = 1),
+        axis.line.y = element_line(color = "black"),
+        # axis.title.y=element_blank(),
+        axis.line.x = element_line(color = "black"),
+        legend.title = element_blank(),
+        legend.position="none")+
+  facet_wrap(. ~ cohort, 
+                    scales = "free_x",
+                    ncol = 4)
+# +
+#   scale_color_manual(values = c("#AF7AC5", "#117A65"))
+
+(p <- cowplot::plot_grid(
+  NULL, p1, NULL, p2, 
+  ncol = 1, align = "v", axis = "lr",
+  rel_heights  = c(.04, 0.6, .04, 0.38),
+  labels = c("a) ","", "b) ", ""),
+  label_size = 8))
+
+ggsave(p, filename = fs::path(dir_reports, "Figure 2. auc plot and coefficient plot 1.jpg"),
+       width = 5, height = 4, dpi=300, bg= "white")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Figure 2.1. AUC comparison of models (old) 
+
+```{r auc comparison plot}
+auc <- read_csv(fs::path(dir_results,
+                         "prediction",
+                         "4_auc_df.csv"))
+### Create auc comparision plots-----
+model_name <- c("GRF", "GRF + SRF","GRF + metabolites", "GRF + SRF + metabolites","metabolites")
+
+auc <- auc %>% mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
+
+p1 <- auc %>% filter(model %in% model_name) %>%
+  ggplot(aes(x = factor(model, levels = model_name), y = auc, color = cohort)) +
+  geom_point(size = 1, position =position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = ci_low,
+                    ymax = ci_high),
+                width = 0.2, 
+                position =position_dodge(width = 0.3)) +
+  ylab("AUC (95% CI)") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey") +
+  facet_wrap(~cohort) +
+  theme(panel.background = element_rect(fill="white"), 
+        # panel.grid = element_blank(),
+        strip.background = element_rect(fill = "white"),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        text = element_text(size = 10),
+        axis.title.x=element_blank(),
+        axis.line.x = element_line(color = "black"),
+        # axis.title.y=element_blank(),
+        axis.line.y = element_line(color = "black"),
+        legend.title = element_blank(),
+        legend.position="none",
+        axis.text.x = element_text(angle = 45, hjust=1)) +
+  scale_color_manual(values = c("#AF7AC5", "#117A65")) + 
+  
+
+# ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
+#        width = 8, height = 5, dpi=300)
+```
+
+
+### Figure 2.2. Coefficient comparison of SOLAR and CHS
+```{r coefficient plot}
+solar_coef_df <- read_csv(fs::path(dir_results,"prediction",
+                                   "4_solar_model_result_with_annotation_0530.csv"))
+
+chs_coef_df <- read_csv(fs::path(dir_results,"prediction",
+                                   "4_chs_model_result_with_annotation_0530.csv"))
+
+full_coef_df <- solar_coef_df %>% mutate(cohort = "SOLAR") %>%
+  bind_rows(chs_coef_df %>% mutate(cohort = "CHS")) %>%
+  mutate(
+    cohort = ifelse(cohort == "SOLAR", "SOLAR (discovery)", "CHS (validation)")) %>%
+  mutate(
+    cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)"))
+  )
+
+full_coef_df_plot <- full_coef_df  %>% 
+  filter(met_name_first %in% c("Taurocholic acid", "Allylphenol sulfate", "Caprylic acid")) %>%
+  mutate(met_name_first = case_when(met_name_first == 
+                                      "Taurocholic acid" ~ "Taurocholic Acid  (Bile Acid)", 
+                                    met_name_first == "Allylphenol sulfate" ~ "Allylphenol Sulfate (Polyphenol)",
+         met_name_first == "Caprylic acid" ~ "Caprylic Acid      (MCFA)"))
+
+### Create metabolites Coefficient Plots
+p2 <- full_coef_df_plot %>%
+  ggplot(aes(x = met_name_first,y = odds_ratio, color = cohort)) +
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = exp_conf_low,
+                    ymax = exp_conf_high),
+                width = 0.2) +
+  geom_hline(yintercept = 1, linetype = 2, color = "grey") +
+  ylab("Odds Ratio (95% CI)") +
+  # scale_x_discrete(limits = c( "Taurocholic acid","Caprylic acid","Allylphenol sulfate")) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 19)) +
+  theme(panel.background = element_rect(fill="white"), 
+        strip.background = element_rect(fill = "white"),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        # strip.text.x = element_blank(),
+        text = element_text(size = 10),
+        axis.title.x=element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.line.x = element_line(color = "black"),
+        # axis.title.y=element_blank(),
+        axis.line.y = element_line(color = "black"),
+        legend.title = element_blank(),
+        legend.position="none")+
+  facet_wrap(. ~ cohort, 
+                    scales = "free_x",
+                    ncol = 4)+
+  scale_color_manual(values = c("#AF7AC5", "#117A65"))
+
+(p <- cowplot::plot_grid(
+  NULL, p1, NULL, p2, 
+  ncol = 4, align = "h", axis = "lr",
+  rel_widths = c(.04, 0.6, .04, 0.6),
+  labels = c("a) ","", "b) ", ""),
+  label_size = 8))
+
+ggsave(p, filename = fs::path(dir_reports, "Figure 2. auc plot and coefficient plot.jpg"),
+       width = 6, height = 3, dpi=300, bg= "white")
+```
