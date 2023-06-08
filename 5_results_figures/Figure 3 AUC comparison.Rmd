@@ -65,4 +65,3 @@ auc %>% filter(model %in% model_name) %>%
 # ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
 #        width = 8, height = 5, dpi=300)
 ```
-```
