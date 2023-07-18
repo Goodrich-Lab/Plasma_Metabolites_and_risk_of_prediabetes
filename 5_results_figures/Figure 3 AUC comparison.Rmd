@@ -65,3 +65,39 @@ auc %>% filter(model %in% model_name) %>%
 # ggsave(filename = fs::path(dir_reports, "Figure 3. Prediction performance of models.jpg"),
 #        width = 8, height = 5, dpi=300)
 ```
+
+### Figure 2. AUC comparison of models (Two metabolites)
+```{r auc comparison plot with two metabolites}
+### Create auc comparision plots-----
+model_name <- c("GRF", "GRF + SRF","GRF + reduced metabolites", "GRF + SRF + reduced metabolites","reduced metabolites")
+
+auc <- auc %>% 
+  mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
+
+auc %>% filter(model %in% model_name) %>%
+  ggplot(aes(x = factor(model, levels = model_name), y = auc, color = cohort)) +
+  geom_point(size = 1, position =position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = ci_low,
+                    ymax = ci_high),
+                width = 0.2, 
+                position =position_dodge(width = 0.3)) +
+  ylab("AUC (95% CI)") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey") +
+  facet_wrap(~cohort) +
+  theme(panel.background = element_rect(fill="white"), 
+        # panel.grid = element_blank(),
+        strip.background = element_rect(fill = "white"),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        text = element_text(size = 18),
+        axis.title.x=element_blank(),
+        axis.line.x = element_line(color = "black"),
+        # axis.title.y=element_blank(),
+        axis.line.y = element_line(color = "black"),
+        legend.title = element_blank(),
+        legend.position="none",
+        axis.text.x = element_text(angle = 45, hjust=1)) +
+  scale_color_manual(values = c("#AF7AC5", "#117A65"))
+
+ggsave(filename = fs::path(dir_reports, "Figure 2. Prediction performance of models with reduced metabolites.jpg"),
+       width = 8, height = 5, dpi=300, bg = "white")
+```

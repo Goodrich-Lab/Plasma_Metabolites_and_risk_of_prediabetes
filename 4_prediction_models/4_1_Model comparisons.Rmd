@@ -38,19 +38,19 @@ chs_analysis <- read_rds(fs::path(dir_data_analysis, "CHS analysis full data.rds
 # Metablite feature name
 
 # Option1: Three predictive metabolites selected in feature selection process
-selected_feature_name <-
-  c(
-    "515.287209133297_215.197333996352",
-    "214.026117480542_35.1421775112176",
-    "125.097384256509_58.1004384860803"
-)
-
-# Option2: Two predictive metabolites which showed consistent direction of association in the discovery and validation cohort
 # selected_feature_name <-
 #   c(
+#     "515.287209133297_215.197333996352",
 #     "214.026117480542_35.1421775112176",
 #     "125.097384256509_58.1004384860803"
 # )
+
+# Option2: Two predictive metabolites which showed consistent direction of association in the discovery and validation cohort
+selected_feature_name <-
+  c(
+    "214.026117480542_35.1421775112176",
+    "125.097384256509_58.1004384860803"
+)
 
 # Load Exposure Outcome Data 
 sol <- read_rds(fs::path(dir_data_analysis,
@@ -539,7 +539,7 @@ result_df_solar <- result_df %>%
                                     term ==  "`125.097384256509_58.1004384860803`" ~ "Caprylic acid"))
   
   
-# write_csv(result_df_solar, fs::path(dir_results,"prediction", "4_solar_model_result_with_annotation_0530.csv"))
+# write_csv(result_df_solar, fs::path(dir_results,"prediction", "4_solar_model_result_with_annotation_0718_reduced_metabolites.csv"))
 
 ## grf
 fit_grf <- glm(as.formula(str_c("diabete_change_di ~", str_c(covars1[-4], collapse = "+"))),
@@ -637,7 +637,7 @@ result_df_chs <- result_df %>%
                                     term ==  "`125.097384256509_58.1004384860803`" ~ "Caprylic acid"))
   
   
-# write_csv(result_df_chs, fs::path(dir_results,"prediction", "4_chs_model_result_with_annotation_0530.csv"))
+# write_csv(result_df_chs, fs::path(dir_results,"prediction", "4_chs_model_result_with_annotation_reduced_metabolites_0718.csv"))
 
 ## grf
 fit_grf <- glm(as.formula(str_c("diabete_change_di ~", str_c(covars1, collapse = "+"))),
@@ -744,7 +744,7 @@ auc
 # write_csv(auc,
 #           fs::path(dir_results,
 #                    "prediction",
-#                    "4_auc_df.csv"))
+#                    "4_auc_df_reduced.csv"))
 ```
 
 
@@ -983,7 +983,7 @@ auc_ifg
 # write_csv(auc_ifg,
 #           fs::path(dir_results,
 #                    "prediction",
-#                    "4_auc_df_ifg.csv"))
+#                    "4_auc_df_ifg_reduced.csv"))
 ```
 
 ## Prediction model with outcome defined by only IGT
@@ -1219,7 +1219,7 @@ auc_igt
 # write_csv(auc_igt,
 #           fs::path(dir_results,
 #                    "prediction",
-#                    "4_auc_df_igt.csv"))
+#                    "4_auc_df_igt_reduced.csv"))
 
 ```
 
