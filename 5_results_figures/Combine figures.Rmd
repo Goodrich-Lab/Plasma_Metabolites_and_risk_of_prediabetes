@@ -8,6 +8,8 @@ output:
     toc_float: true
     df_print: paged
     code_folding: hide
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -34,11 +36,13 @@ auc <- read_csv(fs::path(dir_results,
                          "prediction",
                          "4_auc_df.csv"))
 ### Create auc comparision plots-----
-model_name <- c("metabolites","GRF + SRF + metabolites","GRF + metabolites","GRF + SRF","GRF")
+# model_name <- c("metabolites","GRF + SRF + metabolites","GRF + metabolites","GRF + SRF","GRF")
 
-auc <- auc %>% mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
+model_name <- c("predictive metabolites", "GRF + SRF + predictive metabolites", "GRF + predictive metabolites", "GRF + SRF","GRF")
 
-p1 <- auc %>% filter(model %in% model_name) %>%
+auc1 <- auc %>% mutate(across("model", str_replace, "reduced metabolites", "predictive metabolites")) %>% mutate(cohort = factor(cohort, levels = c("SOLAR (discovery)", "CHS (validation)")))
+
+p1 <- auc1 %>% filter(model %in% model_name) %>%
   ggplot(aes(y = factor(model, levels = model_name), x = auc)) +
   geom_point(size = 1, position =position_dodge(width = 0.3)) +
   geom_errorbar(aes(xmin = ci_low,
@@ -69,10 +73,10 @@ p1 <- auc %>% filter(model %in% model_name) %>%
 ### Figure 2.2. Coefficient comparison of SOLAR and CHS
 ```{r coefficient plot}
 solar_coef_df <- read_csv(fs::path(dir_results,"prediction",
-                                   "4_solar_model_result_with_annotation_0530.csv"))
+                                   "4_solar_model_result_with_annotation_0718_reduced_metabolites.csv"))
 
 chs_coef_df <- read_csv(fs::path(dir_results,"prediction",
-                                   "4_chs_model_result_with_annotation_0530.csv"))
+                                   "4_chs_model_result_with_annotation_reduced_metabolites_0718.csv"))
 
 full_coef_df <- solar_coef_df %>% mutate(cohort = "SOLAR") %>%
   bind_rows(chs_coef_df %>% mutate(cohort = "CHS")) %>%
@@ -125,7 +129,7 @@ p2 <- full_coef_df_plot %>%
   labels = c("a) ","", "b) ", ""),
   label_size = 8))
 
-ggsave(p, filename = fs::path(dir_reports, "Figure 2. auc plot and coefficient plot 1.jpg"),
+ggsave(p, filename = fs::path(dir_reports, "Figure 2. auc plot and coefficient plot two metabolites.jpg"),
        width = 5, height = 4, dpi=300, bg= "white")
 ```
 
