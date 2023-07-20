@@ -990,3 +990,15 @@ auc_chs_igt <- auc1_chs %>%
 
 auc_chs_igt
 ```
+
+## Combime model comparison results
+```{r combine pvalues}
+pvalue_overall <- pvalue_df %>%
+  mutate(outcome_type = "Prediabetes/T2D") %>% 
+  bind_rows(pvalue_df_ifg %>% mutate(outcome_type = "IFG")) %>%
+  bind_rows(pvalue_df_igt %>% mutate(outcome_type = "IGT")) %>%
+  filter(model %in% c("GRF + metabolites vs GRF", "GRF + SRF + metabolites vs GRF + SRF"))
+
+write.csv(pvalue_overall, fs::path(dir_results, "model_comparison_pvalues_two_metabolites.csv"))
+```
+
